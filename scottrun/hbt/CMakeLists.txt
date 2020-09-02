@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(hbt_ppbar CXX)
-set(GITHOME "/Users/scottpratt/git")
+set(GITHOME $ENV{GITHOME_MSU})
 
 add_custom_target(extern_commonutils COMMAND make WORKING_DIRECTORY ${GITHOME}/commonutils/software)
 add_custom_target(extern_coral COMMAND make WORKING_DIRECTORY ${GITHOME}/coral/software)
