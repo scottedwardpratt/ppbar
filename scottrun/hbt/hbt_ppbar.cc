@@ -5,7 +5,8 @@ using namespace std;
 int main(){
 	CHBT_BES hbt("parameters.txt");
 	printf("howdy\n");
+	hbt.randy->reset(-time(NULL));
 	hbt.ReadPR();
-	hbt.CalcCF();
+	hbt.CalcCF_MC();
 	return 0;
 }

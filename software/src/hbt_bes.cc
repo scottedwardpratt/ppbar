@@ -15,6 +15,10 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	IDA=parmap->getI("IDA",-2212);
 	IDB=parmap->getI("IDB",-2212);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
+	NMC=parmap->getI("NMC",100000);
+	RANSEED=parmap->getD("RANSEED",-12345);
+	QINVTEST=parmap->getD("QINVTEST",50.0);
+	randy=new CRandy(RANSEED);
 	
 	if((IDA==2212 && IDB==2212) || (IDA==-2212 && IDB==-2212)){
 		wf=new CWaveFunction_pp_schrod(parsfilename);

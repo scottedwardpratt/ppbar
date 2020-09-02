@@ -1,10 +1,13 @@
 IDA 2212
 IDB 2212
-DELqinv 1.0
-Nqinv 100
+DELqinv 2.0
+Nqinv 50
 TAU_COMPARE 12.0
 INPUT_OSCAR_FILENAME oscardata/particle_lists.oscar
 QARRAYFILENAME crap.txt
-DELQ 1.0
-NQMAX 100
-NEVENTS_MAX 100
+DELQ 2.0
+NQMAX 50
+NEVENTS_MAX 1000
+NMC 100000
+RANSEED -12345
+QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc

@@ -3,6 +3,7 @@
 #include "commonutils.h"
 #include "coral.h"
 #include "parameterMap.h"
+#include "randy.h"
 
 using namespace std;
 
@@ -20,14 +21,15 @@ class CHBT_BES{
 public:
 	CparameterMap *parmap;
 	CWaveFunction *wf;
+	CRandy *randy;
 	
 	string INPUT_OSCAR_FILENAME;
 	string OUTPUT_CF_FILENAME;
-	double TAU_COMPARE;
+	double TAU_COMPARE,QINVTEST;
 	
 	// CF objects
-	int Nqinv,IDA,IDB,NEVENTS_MAX;
-	double DELqinv,qinvMAX;
+	int Nqinv,IDA,IDB,NEVENTS_MAX,NMC;
+	double DELqinv,qinvMAX,RANSEED;
 	vector<double> CFqinv;
 	
 	// Part List
@@ -41,6 +43,7 @@ public:
 	void AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &pread,vector<double> &xread);
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
+	void CalcCF_MC();
 };
 
 #endif
