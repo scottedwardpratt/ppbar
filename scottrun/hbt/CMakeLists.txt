@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(hbt_ppbar CXX)
 set(GITHOME $ENV{GITHOME_MSU})
@@ -21,7 +20,7 @@ message("Libraries: b3d_bes                                     ${GSL_LIBRARY} $
 
 find_library(${GITHOME}/commonutils/software/lib commonutils)
 find_library(${GITHOME}/coral/software/lib coral)
-find_library(../../software/lib hbt_bes)
+find_library(${GITHOME}/ppbar/software/lib hbt_bes)
 
 set(SOURCE_FILES ./hbt_ppbar.cc)
 SET_SOURCE_FILES_PROPERTIES(
