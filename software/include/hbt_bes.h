@@ -2,7 +2,7 @@
 #define __HBT_BES_H__
 #include "commonutils.h"
 #include "coral.h"
-#include "parameterMap.h"
+#include "parametermap.h"
 #include "randy.h"
 
 using namespace std;
