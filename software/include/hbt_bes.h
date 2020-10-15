@@ -24,6 +24,8 @@ public:
 	CRandy *randy;
 	
 	string INPUT_OSCAR_FILENAME;
+	string INPUT_OSCAR_BASE_DIRECTORY;
+	int INPUT_OSCAR_NRUNS;
 	string OUTPUT_CF_FILENAME;
 	double TAU_COMPARE,QINVTEST;
 	

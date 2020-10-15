@@ -27,7 +27,7 @@ int main(){
 		rhocount+=ms.partlist->CountResonances(113)+ms.partlist->CountResonances(213)+ms.partlist->CountResonances(-213);
 		if((10*(ievent+1))%nevents==0)
 			printf("After %d events, nparts/event=%g\n",ms.NEVENTS,double(nparts)/double(ms.NEVENTS));
-		//ms.partlist->Reset();
+		ms.partlist->Reset();
 	}
 	printf("Nrho=%g\n",double(rhocount)/double(nevents));
 	printf("Ndelta=%g\n",double(deltacount)/double(nevents));

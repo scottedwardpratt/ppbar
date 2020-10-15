@@ -1,5 +1,6 @@
 #ifndef __HBT_BES_CC__
 #define __HBT_BES_CC__
+#include <cstring>
 #include "commondefs.h"
 #include "coral.h"
 #include "hbt_bes.h"
@@ -16,6 +17,8 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	IDB=parmap->getI("IDB",-2212);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
+	INPUT_OSCAR_BASE_DIRECTORY=parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
+	INPUT_OSCAR_NRUNS=parmap->getI("INPUT_OSCAR_NRUNS",24);
 	RANSEED=parmap->getD("RANSEED",-12345);
 	QINVTEST=parmap->getD("QINVTEST",50.0);
 	randy=new CRandy(RANSEED);
@@ -44,42 +47,70 @@ CHBT_BES::CHBT_BES(string parsfilename){
 }
 
 void CHBT_BES::ReadPR(){
-	int ipart,nparts,ID,nevents,charge,smashID;
+	double YMAX=0.5;
+	int ipart,nparts,ID,nevents,charge,smashID,irun;
 	char dummy[200],dumbo1[20],dumbo2[20],dumbo3[20];
 	vector<double> p,x;
+	double phi,yy,sphi,cphi,rap,gamma,gammav,pt,z,taucalc=25.0;
 	p.resize(4);
 	x.resize(4);
 	double mass;
-	FILE *oscarfile=fopen(INPUT_OSCAR_FILENAME.c_str(),"r");
-	for(int idummy=0;idummy<3;idummy++){
-		fgets(dummy,160,oscarfile);
-	}
-	
-	do{
-		fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
-		fgets(dummy,160,oscarfile);
-		if(!feof(oscarfile)){
-			printf("nparts=%d\n",nparts);
-			for(ipart=0;ipart<nparts;ipart++){
-				fscanf(oscarfile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %d %d %d",
-				&x[0],&x[1],&x[2],&x[3],&mass,&p[0],&p[1],&p[2],&p[3],&ID,&smashID,&charge);
-				fgets(dummy,160,oscarfile);
-				//printf("check ipart=%d, ID=%d\n",ipart,ID);
-				for(int alpha=0;alpha<4;alpha++){
-					p[alpha]*=1000.0;
-					mass*=1000.0;
-				}
-				if(ID==IDA){
-					AddPart(parta,ID,p,x);
-				}
-				if(IDB!=IDA && ID==IDB){
-					AddPart(partb,ID,p,x);
-				}
-			}
-			fgets(dummy,160,oscarfile);
+	FILE *oscarfile;
+	for(irun=0;irun<INPUT_OSCAR_NRUNS;irun++){
+		INPUT_OSCAR_FILENAME=INPUT_OSCAR_BASE_DIRECTORY+"run"+to_string(irun)+"/"+"0/particle_lists.oscar";
+		oscarfile=fopen(INPUT_OSCAR_FILENAME.c_str(),"r");
+		printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
+		for(int idummy=0;idummy<3;idummy++){
+			fgets(dummy,200,oscarfile);
 		}
-	}while(!feof(oscarfile) && nevents<NEVENTS_MAX);
-	fclose(oscarfile);
+		do{
+			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
+			printf("nparts=%d\n",nparts);
+			fgets(dummy,160,oscarfile);
+			if(!feof(oscarfile)){
+				for(ipart=0;ipart<nparts;ipart++){
+					fscanf(oscarfile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %d %d %d",
+					&x[0],&x[1],&x[2],&x[3],&mass,&p[0],&p[1],&p[2],&p[3],&ID,&smashID,&charge);
+					fgets(dummy,160,oscarfile);
+					//printf("check ipart=%d, ID=%d\n",ipart,ID);
+					for(int alpha=0;alpha<4;alpha++){
+						p[alpha]*=1000.0;
+						mass*=1000.0;
+					}
+					rap=atanh(p[3]/p[0]);
+					if(fabs(rap)<YMAX){
+						phi=atan2(p[2],p[1]);
+						pt=sqrt(p[1]*p[1]+p[2]*p[2]);
+						cphi=cos(phi);
+						sphi=sin(phi);
+						//r=sqrt(x[1]*x[1]+x[2]*x[2]);
+						yy=x[2];
+						x[2]=x[2]*cphi-x[1]*sphi;
+						x[1]=x[1]*cphi+yy*sphi;
+						p[2]=0.0;
+						p[1]=pt;
+						gamma=cosh(rap);
+						gammav=sinh(rap);
+						p[0]=p[0]*gamma-gammav*p[3];
+						p[3]=0.0;
+						z=p[3];
+						x[3]=gamma*x[3]-gammav*x[0];
+						x[0]=gamma*x[0]-gammav*z;
+						x[3]=x[3]-(p[3]/p[0])*(x[0]-taucalc);
+						x[0]=taucalc;
+						if(ID==IDA){
+							AddPart(parta,ID,p,x);
+						}
+						if(IDB!=IDA && ID==IDB){
+							AddPart(partb,ID,p,x);
+						}
+					}
+				}
+				fgets(dummy,160,oscarfile);
+			}
+		}while(!feof(oscarfile) && nevents<NEVENTS_MAX);
+		fclose(oscarfile);
+	}
 }
 
 void CHBT_BES::AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &pread,vector<double> &xread){

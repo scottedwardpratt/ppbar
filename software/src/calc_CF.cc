@@ -71,19 +71,33 @@ void CHBT_BES::CalcCF_MC(){
 			partbb=parta[ib];
 		qinv=Getqinv(partaa->p,partbb->p);
 		if(qinv<QINVTEST){
-			nsample+=1;
 			CalcXR(partaa,partbb,x,r);
-			for(iq=0;iq<Nqinv;iq++){
-				for(ictheta=0;ictheta<nctheta;ictheta++){
-					ctheta=-1.0+2.0*randy->ran();
-					psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-					CFqinv[iq]+=psisquared;
+			if(r==r && r!=0.0){
+				nsample+=1;
+				for(iq=0;iq<Nqinv;iq++){
+					for(ictheta=0;ictheta<nctheta;ictheta++){
+						ctheta=-1.0+2.0*randy->ran();
+						psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+						if(psisquared!=psisquared){
+							printf("ia=%d, ib=%d\n",ia,ib);
+							printf("x=(%g,%g,%g,%g)\n",x[0],x[1],x[2],x[3]);
+							printf("psisquared=%g, r=%g\n",psisquared,r);
+							partaa->Print();
+							partbb->Print();
+							printf("----------------------\n");
+						}
+						CFqinv[iq]+=psisquared;
+					}
 				}
+			}
+			else{
+				printf("r=%g???\n",r);
 			}
 			if((10*nsample)%NMC==0)
 				printf("finished %g percent\n",100.0*nsample/double(NMC));
 		}
 	}
+	printf("nsample=%d\n",nsample);
 	printf("CF for %d,%d, NMC=%d\n",IDA,IDB,NMC);
 	for(iq=0;iq<Nqinv;iq++){
 		CFqinv[iq]=CFqinv[iq]/double(NMC*nctheta);
