@@ -4,53 +4,12 @@
 #include "coral.h"
 #include "hbt_bes.h"
 
-void CHBT_BES::CalcCF(){
-	CHBT_Part *partaa,*partbb;
-	int ia,ib,namax,nbmax,iq,ictheta,Nctheta=20,nsample=0;
-	double qinv,psisquared,dctheta,r,ctheta;
-	vector<double> x;
-	x.resize(4);
-	if(IDA==IDB)
-		dctheta=1.0/double(Nctheta);
-	else
-		dctheta=2.0/double(Nctheta);
-	namax=parta.size();
-	nbmax=partb.size();
-	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d\n",namax,nbmax);
-	for(ia=1;ia<namax;ia++){
-		partaa=parta[ia];
-		if(IDA==IDB)
-			nbmax=ia;
-		for(ib=0;ib<nbmax;ib++){
-			if(IDA!=IDB)
-				partbb=partb[ib];
-			else
-				partbb=parta[ib];
-			qinv=Getqinv(partaa->p,partbb->p);
-			if(qinv<QINVTEST){
-				nsample+=Nctheta;
-				for(iq=0;iq<Nqinv;iq++){
-					for(ictheta=0;ictheta<Nctheta;ictheta++){
-						ctheta=-1+(0.5+ictheta)*dctheta;
-						CalcXR(partaa,partbb,x,r);
-						psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-						CFqinv[iq]+=psisquared;
-					}
-				}
-			}
-		}
-	}
-	printf("CF for %d,%d, nsample=%d\n",IDA,IDB,nsample);
-	for(iq=0;iq<Nqinv;iq++){
-		CFqinv[iq]=CFqinv[iq]/double(nsample);
-		printf("%6.2f %g\n",(iq+0.5)*DELqinv,CFqinv[iq]);
-	}
-}
-
 void CHBT_BES::CalcCF_MC(){
 	CHBT_Part *partaa,*partbb;
-	int ia,ib,namax,nbmax,iq,nsample,nctheta=10,ictheta;
-	double qinv,psisquared,r,ctheta;
+	CF *cf;
+	int ia,ib,namax,nbmax,nsample=0;
+	double qinv;
+	bool success=false;
 	vector<double> x;
 	x.resize(4);
 	namax=parta.size();
@@ -58,7 +17,6 @@ void CHBT_BES::CalcCF_MC(){
 	if(IDA==IDB)
 		nbmax=namax;
 	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d\n",namax,nbmax);
-	nsample=0;
 	while(nsample<NMC){
 		do{
 			ia=lrint(floor(namax*randy->ran()));
@@ -71,84 +29,25 @@ void CHBT_BES::CalcCF_MC(){
 			partbb=parta[ib];
 		qinv=Getqinv(partaa->p,partbb->p);
 		if(qinv<QINVTEST){
-			CalcXR(partaa,partbb,x,r);
-			if(r==r && r!=0.0){
+			cf=GetCF(partaa,partbb);
+			if(cf!=NULL){
 				nsample+=1;
-				for(iq=0;iq<Nqinv;iq++){
-					for(ictheta=0;ictheta<nctheta;ictheta++){
-						ctheta=-1.0+2.0*randy->ran();
-						psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-						if(psisquared!=psisquared){
-							printf("ia=%d, ib=%d\n",ia,ib);
-							printf("x=(%g,%g,%g,%g)\n",x[0],x[1],x[2],x[3]);
-							printf("psisquared=%g, r=%g\n",psisquared,r);
-							partaa->Print();
-							partbb->Print();
-							printf("----------------------\n");
-						}
-						CFqinv[iq]+=psisquared;
-					}
-				}
+				success=true;
+				cf->Increment(partaa,partbb);
 			}
-			else{
-				printf("r=%g???\n",r);
-			}
-			if((10*nsample)%NMC==0)
-				printf("finished %g percent\n",100.0*nsample/double(NMC));
+		}
+		if((10*nsample)%NMC==0 && success==true){
+			printf("finished %g percent\n",100.0*nsample/double(NMC));
+			success=false;
 		}
 	}
-	printf("nsample=%d\n",nsample);
-	printf("CF for %d,%d, NMC=%d\n",IDA,IDB,NMC);
-	for(iq=0;iq<Nqinv;iq++){
-		CFqinv[iq]=CFqinv[iq]/double(NMC*nctheta);
-		printf("%6.2f %g\n",(iq+0.5)*DELqinv,CFqinv[iq]);
-	}
-}
-
-/*
-void CHBT_BES::CalcCF_MC_ALT(){
-	CHBT_Part *partaa,*partbb;
-	int ia,ib,namax,nbmax,iq,nsample;
-	double qinv,psisquared,r,ctheta;
-	vector<double> x;
-	x.resize(4);
-	namax=parta.size();
-	nbmax=partb.size();
-	if(IDA==IDB)
-		nbmax=namax;
-	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d\n",namax,nbmax);
-	for(iq=0;iq<Nqinv;iq++){
-		printf("Calculating for iq=%d\n",iq);
-		
-		nsample=0;
-		while(nsample<NMC){
-			do{
-				ia=lrint(floor(namax*randy->ran()));
-				ib=lrint(floor(nbmax*randy->ran()));
-			}while(ia==ib && IDA==IDB);
-			partaa=parta[ia];
-			if(IDA!=IDB)
-				partbb=partb[ib];
-			else
-				partbb=parta[ib];
-			CalcXR(partaa,partbb,x,r);
-			qinv=Getqinv(partaa->p,partbb->p);
-			if(qinv<QINVTEST){
-				ctheta=-1.0+2.0*randy->ran();
-				nsample+=1;
-				psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-				CFqinv[iq]+=psisquared;
+	for(int irap=0;irap<NRAP;irap++){
+		for(int iphi=0;iphi<NPHI;iphi++){
+			for(int ipt=0;ipt<NPT;ipt++){
+				CFArray[irap][iphi][ipt]->DivideByNSample();
 			}
 		}
 	}
-	printf("CF for %d,%d, NMC=%d\n",IDA,IDB,NMC);
-	for(iq=0;iq<Nqinv;iq++){
-		CFqinv[iq]=CFqinv[iq]/double(NMC);
-		printf("%6.2f %g\n",(iq+0.5)*DELqinv,CFqinv[iq]);
-	}
 }
-*/
-
-
 
 #endif

@@ -10,18 +10,26 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
 	INPUT_OSCAR_FILENAME=parmap->getS("INPUT_OSCAR_FILENAME","data/crap.oscar");
-	Nqinv=parmap->getI("Nqinv",100);
-	DELqinv=parmap->getD("DELqinv",1.0);
-	qinvMAX=Nqinv*DELqinv;
+	CF::NQ=parmap->getI("Nqinv",100);
+	CF::DELQ=parmap->getD("DELqinv",2.0);
+	NPHI=parmap->getI("NPHI",4);
+	NRAP=parmap->getI("NRAP",3);
+	DELRAP=parmap->getD("DELRAP",0.2);
+	NPT=parmap->getI("NPT",20);
+	DELPT=parmap->getI("DELPT",100.0);
+	YMAX=1.0;
 	IDA=parmap->getI("IDA",-2212);
 	IDB=parmap->getI("IDB",-2212);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
+	TAU_COMPARE=25.0;
 	INPUT_OSCAR_BASE_DIRECTORY=parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
 	INPUT_OSCAR_NRUNS=parmap->getI("INPUT_OSCAR_NRUNS",24);
-	RANSEED=parmap->getD("RANSEED",-12345);
+	//RANSEED=parmap->getD("RANSEED",-12345);
+	RANSEED=-time(NULL);
 	QINVTEST=parmap->getD("QINVTEST",50.0);
 	randy=new CRandy(RANSEED);
+	CF::randy=randy;
 	
 	if((IDA==2212 && IDB==2212) || (IDA==-2212 && IDB==-2212)){
 		wf=new CWaveFunction_pp_schrod(parsfilename);
@@ -42,16 +50,27 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		printf("fatal: IDs not recognized, IDA=%d, IDB=%d\n",IDA,IDB);
 		exit(1);
 	}
-	CFqinv.resize(Nqinv);
-	
+	CFArray.resize(NRAP);
+	for(int irap=0;irap<NRAP;irap++){
+		CFArray[irap].resize(NPHI);
+		for(int iphi=0;iphi<NPHI;iphi++){
+			CFArray[irap][iphi].resize(NPT);
+			for(int ipt=0;ipt<NPT;ipt++){
+				CFArray[irap][iphi][ipt]=new CF();
+			}
+		}
+	}
+	cfbar=new CF();
+	cfbar->Reset();
+	CF::wf=wf;
 }
 
 void CHBT_BES::ReadPR(){
-	double YMAX=0.5;
+	int iskip;
 	int ipart,nparts,ID,nevents,charge,smashID,irun;
 	char dummy[200],dumbo1[20],dumbo2[20],dumbo3[20];
+	double rap;
 	vector<double> p,x;
-	double phi,yy,sphi,cphi,rap,gamma,gammav,pt,z,taucalc=25.0;
 	p.resize(4);
 	x.resize(4);
 	double mass;
@@ -59,13 +78,13 @@ void CHBT_BES::ReadPR(){
 	for(irun=0;irun<INPUT_OSCAR_NRUNS;irun++){
 		INPUT_OSCAR_FILENAME=INPUT_OSCAR_BASE_DIRECTORY+"run"+to_string(irun)+"/"+"0/particle_lists.oscar";
 		oscarfile=fopen(INPUT_OSCAR_FILENAME.c_str(),"r");
-		printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
-		for(int idummy=0;idummy<3;idummy++){
+		//printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
+		for(iskip=0;iskip<3;iskip++){
 			fgets(dummy,200,oscarfile);
 		}
 		do{
 			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
-			printf("nparts=%d\n",nparts);
+			//printf("nparts=%d\n",nparts);
 			fgets(dummy,160,oscarfile);
 			if(!feof(oscarfile)){
 				for(ipart=0;ipart<nparts;ipart++){
@@ -73,55 +92,62 @@ void CHBT_BES::ReadPR(){
 					&x[0],&x[1],&x[2],&x[3],&mass,&p[0],&p[1],&p[2],&p[3],&ID,&smashID,&charge);
 					fgets(dummy,160,oscarfile);
 					//printf("check ipart=%d, ID=%d\n",ipart,ID);
-					for(int alpha=0;alpha<4;alpha++){
-						p[alpha]*=1000.0;
-						mass*=1000.0;
-					}
-					rap=atanh(p[3]/p[0]);
-					if(fabs(rap)<YMAX){
-						phi=atan2(p[2],p[1]);
-						pt=sqrt(p[1]*p[1]+p[2]*p[2]);
-						cphi=cos(phi);
-						sphi=sin(phi);
-						//r=sqrt(x[1]*x[1]+x[2]*x[2]);
-						yy=x[2];
-						x[2]=x[2]*cphi-x[1]*sphi;
-						x[1]=x[1]*cphi+yy*sphi;
-						p[2]=0.0;
-						p[1]=pt;
-						gamma=cosh(rap);
-						gammav=sinh(rap);
-						p[0]=p[0]*gamma-gammav*p[3];
-						p[3]=0.0;
-						z=p[3];
-						x[3]=gamma*x[3]-gammav*x[0];
-						x[0]=gamma*x[0]-gammav*z;
-						x[3]=x[3]-(p[3]/p[0])*(x[0]-taucalc);
-						x[0]=taucalc;
-						if(ID==IDA){
+					if(ID==IDA){
+						rap=atanh(p[3]/p[0]);
+						if(fabs(rap)<YMAX)
 							AddPart(parta,ID,p,x);
-						}
-						if(IDB!=IDA && ID==IDB){
-							AddPart(partb,ID,p,x);
-						}
 					}
+					else if(IDB!=IDA && ID==IDB){
+						rap=atanh(p[3]/p[0]);
+						if(fabs(rap)<YMAX)
+							AddPart(parta,ID,p,x);
+					}
+					fgets(dummy,160,oscarfile);
 				}
-				fgets(dummy,160,oscarfile);
 			}
 		}while(!feof(oscarfile) && nevents<NEVENTS_MAX);
 		fclose(oscarfile);
 	}
 }
 
-void CHBT_BES::AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &pread,vector<double> &xread){
+void CHBT_BES::AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &p,vector<double> &x){
 	CHBT_Part *newpart;
+	double rap0,phi0,pt,y,z,cphi,sphi,gamma,gammav;
 	newpart=new CHBT_Part();
 	part.push_back(newpart);
 	newpart->ID=IDread;
 	for(int alpha=0;alpha<4;alpha++){
-		newpart->p[alpha]=pread[alpha];
+		p[alpha]*=1000.0;
 	}
-	CalcXBjPt(newpart,xread);
+	rap0=atanh(p[3]/p[0]);
+	
+	phi0=atan2(p[2],p[1]);
+	pt=sqrt(p[1]*p[1]+p[2]*p[2]);
+	cphi=cos(phi0);
+	sphi=sin(phi0);
+	//r=sqrt(x[1]*x[1]+x[2]*x[2]);
+	y=x[2];
+	x[2]=x[2]*cphi-x[1]*sphi;
+	x[1]=x[1]*cphi+y*sphi;
+	p[2]=0.0;
+	p[1]=pt;
+	gamma=cosh(rap0);
+	gammav=sinh(rap0);
+	p[0]=p[0]*gamma-gammav*p[3];
+	p[3]=0.0;
+	z=p[3];
+	x[3]=gamma*x[3]-gammav*x[0];
+	x[0]=gamma*x[0]-gammav*z;
+	x[3]=x[3]-(p[3]/p[0])*(x[0]-TAU_COMPARE);
+	x[0]=TAU_COMPARE;
+	for(int alpha=0;alpha<4;alpha++){
+		newpart->p[alpha]=p[alpha];
+		newpart->x[alpha]=x[alpha];
+	}
+	newpart->mass=sqrt(p[0]*p[0]-pt*pt-p[3]*p[3]);
+	newpart->pt=pt;
+	newpart->rap0=rap0;
+	newpart->phi0=phi0;
 }
 
 double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
@@ -141,42 +167,79 @@ double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
 	return 0.5*sqrt(QINV2);
 }
 
-void CHBT_BES::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r){
-	double dummy,gamma,gammav=0.5*((partaa->p[1]/partaa->mass)+(partbb->p[1]/partbb->mass));
-	gamma=sqrt(1.0+gammav*gammav);
-	for(int alpha=0;alpha<4;alpha++)
-		x[alpha]=partaa->xbj[alpha]-partbb->xbj[alpha];
-	dummy=x[0];
-	x[0]=gamma*dummy-gammav*x[1];
-	x[1]=gamma*x[1]-gammav*dummy;
-	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+void CHBT_BES::PrintCFs(){
+	
 }
 
+CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
+	double phi,pt,rap;
+	int irap,iphi,ipt;
+	phi=0.5*(partaa->phi0+partbb->phi0);
+	rap=0.5*(partaa->rap0+partbb->phi0);
+	pt=0.5*(partaa->pt+partbb->pt);
+	irap=fabs(rap)/DELRAP;
+	if(irap<NRAP){
+		ipt=pt/DELPT;
+		phi=fabs(phi);
+		if(phi>PI)
+			phi=phi-PI;
+		if(phi>0.5*PI)
+			phi=PI-phi;
+		iphi=lrint(floor(2.0*phi*NPHI/PI));
+		return CFArray[irap][iphi][ipt];
+		if(iphi<0 || iphi>=NPHI || ipt<0 || ipt>=NPT || irap<0 || irap>=NRAP){
+			printf("oopsie\n");
+			exit(1);
+		}
+	}
+	else
+		return NULL;
 
-void CHBT_BES::CalcXBjPt(CHBT_Part *part,vector<double> &x){
-	double gamma,gammav,mperp,phi,cphi,sphi;
-	mperp=sqrt(part->p[0]*part->p[0]-part->p[3]*part->p[3]);
-	part->pt=sqrt(part->p[1]*part->p[1]+part->p[2]*part->p[2]);
-	part->mass=sqrt(part->p[0]*part->p[0]-part->pt*part->pt-part->p[3]*part->p[3]);
-	gammav=part->p[3]/mperp;
-	gamma=sqrt(1.0+gammav*gammav);
-	part->xbj[0]=gamma*x[0]-gammav*x[3];
-	part->xbj[3]=gamma*x[3]-gammav*x[0];
-	phi=atan2(part->p[2],part->p[1]);
-	cphi=cos(phi);
-	sphi=sin(phi);
-	part->xbj[1]=x[1]*cphi+x[2]*sphi;
-	part->xbj[2]=x[2]*cphi-x[1]*sphi;
-	part->xbj[1]=part->xbj[1]-(part->xbj[0]-TAU_COMPARE)*part->pt/mperp;
-	part->xbj[0]=TAU_COMPARE;	
+}
+
+void CHBT_BES::AverageCF(){
+	long long int nsamplesum=0;
+	int iq,nsample;
+	cfbar->Reset();
+	for(int irap=0;irap<NRAP;irap++){
+		for(int iphi=0;iphi<NPHI;iphi++){
+			for(int ipt=0;ipt<NPT;ipt++){
+				if(CFArray[irap][iphi][ipt]->nsample>0){
+					nsample=CFArray[irap][iphi][ipt]->nsample;
+					nsamplesum+=nsample;
+					for(iq=0;iq<CF::NQ;iq++){
+						cfbar->cf_qinv[iq]+=CFArray[irap][iphi][ipt]->cf_qinv[iq]*nsample;
+						cfbar->cf_qout[iq]+=CFArray[irap][iphi][ipt]->cf_qout[iq]*nsample;
+						cfbar->cf_qside[iq]+=CFArray[irap][iphi][ipt]->cf_qside[iq]*nsample;
+						cfbar->cf_qlong[iq]+=CFArray[irap][iphi][ipt]->cf_qlong[iq]*nsample;
+						
+						if(CFArray[irap][iphi][ipt]->cf_qinv[iq] != CFArray[irap][iphi][ipt]->cf_qinv[iq]){
+							printf("irap=%d, iphi=%d, ipt=%d\n",irap,iphi,ipt);
+							CFArray[irap][iphi][ipt]->Print();
+							exit(1);
+						}
+					}
+				}
+			}
+		}
+	}
+	for(iq=0;iq<CF::NQ;iq++){
+		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(nsamplesum);
+		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(nsamplesum);
+		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(nsamplesum);
+		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(nsamplesum);
+	}
+	cfbar->Print();
 }
 
 CHBT_Part::CHBT_Part(){
 	p.resize(4);
-	xbj.resize(4);
+	x.resize(4);
 }
+
 void CHBT_Part::Print(){
 	printf("ID=%d, mass=%g\n",ID,mass);
-	printf("xbj=(%g,%g,%g,%g), p=(%g,%g,%g,%g)\n",xbj[0],xbj[1],xbj[2],xbj[3],p[0],p[1],p[2],p[3]);
+	printf("x=(%g,%g,%g,%g), p=(%g,%g,%g,%g)\n",x[0],x[1],x[2],x[3],p[0],p[1],p[2],p[3]);
 }
+
 #endif

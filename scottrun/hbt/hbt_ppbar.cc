@@ -7,5 +7,7 @@ int main(){
 	hbt.randy->reset(-time(NULL));
 	hbt.ReadPR();
 	hbt.CalcCF_MC();
+	//hbt.CFArray[0][0][10]->Print();
+	hbt.AverageCF();
 	return 0;
 }
