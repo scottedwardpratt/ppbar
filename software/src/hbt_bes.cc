@@ -78,13 +78,13 @@ void CHBT_BES::ReadPR(){
 	for(irun=0;irun<INPUT_OSCAR_NRUNS;irun++){
 		INPUT_OSCAR_FILENAME=INPUT_OSCAR_BASE_DIRECTORY+"run"+to_string(irun)+"/"+"0/particle_lists.oscar";
 		oscarfile=fopen(INPUT_OSCAR_FILENAME.c_str(),"r");
-		//printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
+		printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
 		for(iskip=0;iskip<3;iskip++){
 			fgets(dummy,200,oscarfile);
 		}
 		do{
 			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
-			//printf("nparts=%d\n",nparts);
+			printf("nparts=%d\n",nparts);
 			fgets(dummy,160,oscarfile);
 			if(!feof(oscarfile)){
 				for(ipart=0;ipart<nparts;ipart++){
