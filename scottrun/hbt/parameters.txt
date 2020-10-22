@@ -4,8 +4,8 @@ IDENTICAL true
 DELqinv 2.0
 Nqinv 50
 TAU_COMPARE 12.0
-INPUT_OSCAR_FILENAME /Users/scottpratt/git/ppbar/scottrun/hbt/run/smash_output/AuAu19.6/run0/0/particle_lists.oscar
-INPUT_OSCAR_BASE_DIRECTORY /Users/scottpratt/git/ppbar/scottrun/hbt/run/smash_output/AuAu19.6/
+INPUT_OSCAR_FILENAME /home/scott/git/ppbar/scottrun/hbt/run/smash_output/AuAu19.6/run0/0/particle_lists.oscar
+INPUT_OSCAR_BASE_DIRECTORY /home/scott/git/ppbar/scottrun/hbt/run/smash_output/AuAu19.6/
 OSCAR_NRUNS 24
 QARRAYFILENAME crap.txt
 DELQ 2.0
