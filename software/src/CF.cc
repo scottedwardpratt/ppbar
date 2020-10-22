@@ -40,8 +40,7 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 		for(iq=0;iq<NQ;iq++){
 			for(ictheta=0;ictheta<Nctheta;ictheta++){
 				ctheta=-1.0+2.0*randy->ran();
-				//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-				psisquared=1.0;
+				psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 				if(psisquared!=psisquared){
 					parta->Print();
 					partb->Print();
@@ -54,12 +53,10 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 			cf_qout[iq]+=psisquared;
 			ctheta=x[2]/r;
-			//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-			psisquared=1.0;
+			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 			cf_qside[iq]+=psisquared;
 			ctheta=x[3]/r;
-			//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
-			psisquared=1.0;
+			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 			cf_qlong[iq]+=psisquared;
 		}
 	}
