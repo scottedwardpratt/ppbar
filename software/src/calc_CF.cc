@@ -7,7 +7,8 @@
 void CHBT_BES::CalcCF_MC(){
 	CHBT_Part *partaa,*partbb;
 	CF *cf;
-	int ia,ib,namax,nbmax,nsample=0;
+	int ia,ib,namax,nbmax;
+	long long int nsample=0;
 	double qinv;
 	bool success=false;
 	vector<double> x;
@@ -16,7 +17,7 @@ void CHBT_BES::CalcCF_MC(){
 	nbmax=partb.size();
 	if(IDA==IDB)
 		nbmax=namax;
-	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d\n",namax,nbmax);
+	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d, NQ=%d\n",namax,nbmax,CF::NQ);
 	while(nsample<NMC){
 		do{
 			ia=lrint(floor(namax*randy->ran()));

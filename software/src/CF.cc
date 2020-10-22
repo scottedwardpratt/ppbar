@@ -21,6 +21,7 @@ CF::CF(){
 	cf_qlong.resize(NQ);
 	Reset();
 }
+
 void CF::Reset(){
 	nsample=0;
 	for(int iq=0;iq<NQ;iq++){
@@ -39,7 +40,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 		for(iq=0;iq<NQ;iq++){
 			for(ictheta=0;ictheta<Nctheta;ictheta++){
 				ctheta=-1.0+2.0*randy->ran();
-				psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+				//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+				psisquared=1.0;
 				if(psisquared!=psisquared){
 					parta->Print();
 					partb->Print();
@@ -52,10 +54,12 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 			cf_qout[iq]+=psisquared;
 			ctheta=x[2]/r;
-			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+			//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+			psisquared=1.0;
 			cf_qside[iq]+=psisquared;
 			ctheta=x[3]/r;
-			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+			//psisquared=wf->CalcPsiSquared(iq,r,ctheta);
+			psisquared=1.0;
 			cf_qlong[iq]+=psisquared;
 		}
 	}

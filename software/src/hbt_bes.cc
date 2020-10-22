@@ -24,7 +24,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	NMC=parmap->getI("NMC",100000);
 	TAU_COMPARE=25.0;
 	INPUT_OSCAR_BASE_DIRECTORY=parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
-	INPUT_OSCAR_NRUNS=parmap->getI("INPUT_OSCAR_NRUNS",24);
+	INPUT_OSCAR_NRUNS=parmap->getI("OSCAR_NRUNS",24);
 	//RANSEED=parmap->getD("RANSEED",-12345);
 	RANSEED=-time(NULL);
 	QINVTEST=parmap->getD("QINVTEST",50.0);
@@ -57,6 +57,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 			CFArray[irap][iphi].resize(NPT);
 			for(int ipt=0;ipt<NPT;ipt++){
 				CFArray[irap][iphi][ipt]=new CF();
+				CFArray[irap][iphi][ipt]->Reset();
 			}
 		}
 	}
@@ -66,7 +67,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 }
 
 void CHBT_BES::ReadPR(){
-	int iskip;
+	int iskip,count;
 	int ipart,nparts,ID,nevents,charge,smashID,irun;
 	char dummy[200],dumbo1[20],dumbo2[20],dumbo3[20];
 	double rap;
@@ -84,9 +85,10 @@ void CHBT_BES::ReadPR(){
 		}
 		do{
 			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
-			printf("nparts=%d\n",nparts);
+			//printf("nparts=%d\n",nparts);
 			fgets(dummy,160,oscarfile);
 			if(!feof(oscarfile)){
+				count=0;
 				for(ipart=0;ipart<nparts;ipart++){
 					fscanf(oscarfile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %d %d %d",
 					&x[0],&x[1],&x[2],&x[3],&mass,&p[0],&p[1],&p[2],&p[3],&ID,&smashID,&charge);
@@ -102,8 +104,9 @@ void CHBT_BES::ReadPR(){
 						if(fabs(rap)<YMAX)
 							AddPart(parta,ID,p,x);
 					}
-					fgets(dummy,160,oscarfile);
+					count+=1;
 				}
+				fgets(dummy,200,oscarfile);
 			}
 		}while(!feof(oscarfile) && nevents<NEVENTS_MAX);
 		fclose(oscarfile);
@@ -176,10 +179,10 @@ CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
 	int irap,iphi,ipt;
 	phi=0.5*(partaa->phi0+partbb->phi0);
 	rap=0.5*(partaa->rap0+partbb->phi0);
-	pt=0.5*(partaa->pt+partbb->pt);
 	irap=fabs(rap)/DELRAP;
-	if(irap<NRAP){
-		ipt=pt/DELPT;
+	pt=0.5*(partaa->pt+partbb->pt);
+	ipt=pt/DELPT;
+	if(irap<NRAP && ipt<NPT){
 		phi=fabs(phi);
 		if(phi>PI)
 			phi=phi-PI;
