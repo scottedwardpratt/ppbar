@@ -6,10 +6,11 @@
 #include "hbt_bes.h"
 
 CHBT_BES::CHBT_BES(string parsfilename){
+	GITHOME_MSU=getenv("GITHOME_MSU");
+	printf("GITHOME_MSU=%s\n",GITHOME_MSU.c_str());
 	parmap=new CparameterMap();
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
-	INPUT_OSCAR_FILENAME=parmap->getS("INPUT_OSCAR_FILENAME","data/crap.oscar");
 	CF::NQ=parmap->getI("Nqinv",100);
 	CF::DELQ=parmap->getD("DELqinv",2.0);
 	NPHI=parmap->getI("NPHI",4);
@@ -23,7 +24,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
 	TAU_COMPARE=25.0;
-	INPUT_OSCAR_BASE_DIRECTORY=parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
+	INPUT_OSCAR_BASE_DIRECTORY=GITHOME_MSU+"/"+parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
 	INPUT_OSCAR_NRUNS=parmap->getI("OSCAR_NRUNS",24);
 	//RANSEED=parmap->getD("RANSEED",-12345);
 	RANSEED=-time(NULL);

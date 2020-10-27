@@ -33,6 +33,7 @@ public:
 	double DELRAP,DELPT,DELPHI,YMAX;
 	int INPUT_OSCAR_NRUNS;
 	string OUTPUT_CF_FILENAME;
+	string GITHOME_MSU;
 	double TAU_COMPARE,QINVTEST;
 	
 	// CF objects
