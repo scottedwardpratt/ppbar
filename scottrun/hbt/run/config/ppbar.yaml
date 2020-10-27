@@ -1,0 +1,39 @@
+Logging:
+    default: INFO
+
+General:
+    Modus:          Afterburner
+    End_Time:       1000.0
+    Randomseed:     -1
+    Nevents:        200      # Number of (sampler + smash) events
+	
+Collision_Term:
+    Strings:	True
+
+Output_Directory:  smash_output_MSU
+Output:
+    Output_Interval: 10.0
+    Particles:
+        Only_Final: Yes
+        Format:     ["Oscar2013", "Binary"]
+        Extended:   True
+
+# Both SMASH and samplers are set up from these
+Particles:   "../external_codes/smash/input/particles.txt"
+DecayModes:  "../external_codes/smash/input/decaymodes.txt"
+
+# The same folder must contain music_input file for iSS sampler
+HyperSurface:   "hydrodata/3DAuAu19.6_smooth_Epz_etasTmuB_tune1_NEOSextended/HYDRO_RESULTS/hydro_results_C0-5/surface_eps_0.26.dat"
+
+Sampler:
+    Type: MSU   # options so far: Microcanonical, MSU, iSS
+    ViscousCorections:
+        Shear:     True
+        Bulk:      False
+        Diffusion: False
+    QuantumCorrections:    False
+    SpectralFunctions:     True
+
+    # Additional sampler-specific options
+    Microcanonical: 
+        PatchEnergy:   50.0  # GeV
