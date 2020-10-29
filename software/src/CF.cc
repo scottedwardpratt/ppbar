@@ -6,19 +6,17 @@
 
 int CF::NQ=50;
 double CF::DELQ=2.0;
-/* int CF::NPHI=4;
-int CF::NRAP=3;
-double CF::DELRAP=0.2;
-int CF::NPT=20;
-double CF::DELPT=100.0; */
+CHBT_BES *CF::hbt=NULL;
 CRandy* CF::randy=NULL;
-CWaveFunction *CF::wf=NULL;
 
 CF::CF(){
 	cf_qinv.resize(NQ);
 	cf_qout.resize(NQ);
 	cf_qside.resize(NQ);
 	cf_qlong.resize(NQ);
+	ThetaPhiDist.resize(10);
+	for(int ictheta=0;ictheta<10;ictheta++)
+		ThetaPhiDist[ictheta].resize(18);
 	Reset();
 }
 
@@ -27,11 +25,15 @@ void CF::Reset(){
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
 	}
+	for(int ictheta=0;ictheta<10;ictheta++)
+		for(int iphi=0;iphi<18;iphi++)
+			ThetaPhiDist[ictheta][iphi]=0.0;
 }
 
 void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
-	int iq,ictheta;
+	int iq,ictheta,iphi;
 	const int Nctheta=6;
+	double phi;
 	double r,psisquared,ctheta;
 	vector<double> x(4,0.0);
 	CalcXR(parta,partb,x,r);
@@ -58,6 +60,13 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			ctheta=x[3]/r;
 			psisquared=wf->CalcPsiSquared(iq,r,ctheta);
 			cf_qlong[iq]+=psisquared;
+			ctheta=x[3]/r;
+			phi=atan2(x[2],x[1]);
+			if(phi<0)
+				phi+=PI;
+			ictheta=lrint(floor(5.0*(1.0+ctheta)));
+			iphi=lrint(floor(phi*18.0/PI));
+			ThetaPhiDist[ictheta][iphi]+=1.0;
 		}
 	}
 	else{
@@ -123,6 +132,43 @@ void CF::Print(){
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",iq*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
 	}
+}
+
+void CF::WriteCFs(string filename){
+	FILE *fptr=fopen(filename.c_str(),"w");
+	int iq;
+	fprintf(fptr,"----- CF ------, nsample=%d\n",nsample);
+	fprintf(fptr,"q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
+	for(iq=0;iq<NQ;iq++){
+		fprintf(fptr,"%7.3f %8.5f %8.5f %8.5f %8.5f\n",iq*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
+	}
+	fclose(fptr);
+}
+
+void CF::WriteThetaPhiDist(string filename){
+	FILE *fptr=fopen(filename.c_str(),"w");
+	int ictheta,iphi;
+	double norm=0.0;
+	for(ictheta=0;ictheta<10;ictheta++){
+		for(iphi=0;iphi<18;iphi++){
+			norm+=ThetaPhiDist[ictheta][iphi];
+		}
+	}
+	norm=norm/180.0;
+	
+	fprintf(fptr,"cos(theta)|          ------  PHI (degrees) ------\n");
+	for(iphi=0;iphi<18;iphi++){
+		fprintf(fptr,"  %5.1f  ",(iphi+0.5)*10);
+	}
+	fprintf(fptr,"\n");
+	for(ictheta=0;ictheta<10;ictheta++){
+		fprintf(fptr,"%5.1f",(ictheta+0.5)*10);
+		for(iphi=0;iphi<18;iphi++){
+			fprintf(fptr," %8.5f ",ThetaPhiDist[ictheta][iphi]/norm);
+		}
+		fprintf(fptr,"\n");
+	}
+	fclose(fptr);
 }
 
 

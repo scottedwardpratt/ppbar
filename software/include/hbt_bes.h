@@ -51,11 +51,12 @@ public:
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
 	void CalcCF_MC();
-	void PrintCFs();
+	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
 	
-	vector<vector<vector<CF *>>> CFArray;	
+	vector<vector<vector<CF *>>> CFArray;
+	void WriteThetaPhiDists();
 	CF *cfbar;
 };
 
@@ -64,14 +65,18 @@ public:
 	static int NQ;
 	static double DELQ;
 	static CRandy *randy;
-	static CWaveFunction *wf;
+	static CHBT_BES *hbt;
+	CWaveFunction *wf;
 	int nsample;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
+	vector<vector<double>> ThetaPhiDist;
 	CF();
 	void CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r);
 	void Reset();
 	void DivideByNSample();
 	void Print();
+	void WriteCFs(string filename);
+	void WriteThetaPhiDist(string filename);
 	void Increment(CHBT_Part *parta,CHBT_Part *partb);
 };
 

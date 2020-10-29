@@ -3,6 +3,11 @@ IDB 2212
 IDENTICAL true
 DELqinv 2.0
 Nqinv 50
+NPHI 18
+NRAP 3
+DELRAP 0.2
+NPT 20
+DELPT 100.0
 TAU_COMPARE 12.0
 INPUT_OSCAR_BASE_DIRECTORY ppbar/scottrun/runss/smash_output/AuAu19.6/
 OSCAR_NRUNS 24
@@ -10,6 +15,6 @@ QARRAYFILENAME crap.txt
 DELQ 2.0
 NQMAX 50
 NEVENTS_MAX 200
-NMC 1000000
+NMC 100000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc

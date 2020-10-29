@@ -13,14 +13,15 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
 	CF::NQ=parmap->getI("Nqinv",100);
 	CF::DELQ=parmap->getD("DELqinv",2.0);
-	NPHI=parmap->getI("NPHI",4);
+	NPHI=parmap->getI("NPHI",16);
 	NRAP=parmap->getI("NRAP",3);
 	DELRAP=parmap->getD("DELRAP",0.2);
 	NPT=parmap->getI("NPT",20);
-	DELPT=parmap->getI("DELPT",100.0);
+	DELPT=parmap->getD("DELPT",100.0);
 	YMAX=1.0;
 	IDA=parmap->getI("IDA",-2212);
 	IDB=parmap->getI("IDB",-2212);
+	DELPHI=2.0*PI/double(NPHI);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
 	TAU_COMPARE=25.0;
@@ -31,6 +32,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	QINVTEST=parmap->getD("QINVTEST",50.0);
 	randy=new CRandy(RANSEED);
 	CF::randy=randy;
+	CF::hbt=this;
 	
 	if((IDA==2212 && IDB==2212) || (IDA==-2212 && IDB==-2212)){
 		wf=new CWaveFunction_pp_schrod(parsfilename);
@@ -59,12 +61,12 @@ CHBT_BES::CHBT_BES(string parsfilename){
 			for(int ipt=0;ipt<NPT;ipt++){
 				CFArray[irap][iphi][ipt]=new CF();
 				CFArray[irap][iphi][ipt]->Reset();
+				CFArray[irap][iphi][ipt]->wf=wf;
 			}
 		}
 	}
 	cfbar=new CF();
 	cfbar->Reset();
-	CF::wf=wf;
 }
 
 void CHBT_BES::ReadPR(){
@@ -171,25 +173,20 @@ double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
 	return 0.5*sqrt(QINV2);
 }
 
-void CHBT_BES::PrintCFs(){
-	
-}
-
 CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
-	double phi,pt,rap;
+	double phi,pt,rap,px,py;
 	int irap,iphi,ipt;
-	phi=0.5*(partaa->phi0+partbb->phi0);
-	rap=0.5*(partaa->rap0+partbb->phi0);
+	px=partaa->p[1]+partbb->p[1];
+	py=partaa->p[2]+partbb->p[2];
+	phi=atan2(py,px);
+	rap=0.5*(partaa->rap0+partbb->rap0);
 	irap=fabs(rap)/DELRAP;
 	pt=0.5*(partaa->pt+partbb->pt);
 	ipt=pt/DELPT;
 	if(irap<NRAP && ipt<NPT){
-		phi=fabs(phi);
-		if(phi>PI)
-			phi=phi-PI;
-		if(phi>0.5*PI)
-			phi=PI-phi;
-		iphi=lrint(floor(2.0*phi*NPHI/PI));
+		if(phi<0.0)
+			phi+=2.0*PI;
+		iphi=lrint(floor(phi*NPHI/(2.0*PI)));
 		return CFArray[irap][iphi][ipt];
 		if(iphi<0 || iphi>=NPHI || ipt<0 || ipt>=NPT || irap<0 || irap>=NRAP){
 			printf("oopsie\n");
