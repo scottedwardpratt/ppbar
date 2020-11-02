@@ -2,8 +2,12 @@
 
 using namespace std;
 
-int main(int argc, char *argv[]){
-	CHBT_BES hbt(string(argv[1]));
+int main(int argc,char *argv[]){
+	if(argc!=2){
+		printf("Usage: hbt_ppbar parameters_filename\n");
+		exit(1);			
+	}
+	CHBT_BES hbt(argv[1]);
 	hbt.randy->reset(-time(NULL));
 	hbt.ReadPR();
 	hbt.CalcCF_MC();
