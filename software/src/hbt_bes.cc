@@ -13,6 +13,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
 	CF::NQ=parmap->getI("Nqinv",100);
 	CF::DELQ=parmap->getD("DELqinv",2.0);
+	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
 	NPHI=parmap->getI("NPHI",16);
 	NRAP=parmap->getI("NRAP",3);
 	DELRAP=parmap->getD("DELRAP",0.2);
@@ -21,7 +22,6 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	YMAX=1.0;
 	IDA=parmap->getI("IDA",-2212);
 	IDB=parmap->getI("IDB",-2212);
-	DELPHI=2.0*PI/double(NPHI);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
 	TAU_COMPARE=25.0;
@@ -174,24 +174,32 @@ double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
 }
 
 CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
-	double phi,pt,rap,px,py;
+	double phi,pt,rap,pxa,pya,pxb,pyb,PX,PY;
 	int irap,iphi,ipt;
-	px=partaa->p[1]+partbb->p[1];
-	py=partaa->p[2]+partbb->p[2];
-	phi=atan2(py,px);
 	rap=0.5*(partaa->rap0+partbb->rap0);
 	irap=fabs(rap)/DELRAP;
-	pt=0.5*(partaa->pt+partbb->pt);
-	ipt=pt/DELPT;
-	if(irap<NRAP && ipt<NPT){
-		if(phi<0.0)
-			phi+=2.0*PI;
-		iphi=lrint(floor(phi*NPHI/(2.0*PI)));
-		return CFArray[irap][iphi][ipt];
-		if(iphi<0 || iphi>=NPHI || ipt<0 || ipt>=NPT || irap<0 || irap>=NRAP){
-			printf("oopsie\n");
-			exit(1);
+	if(irap<NRAP){
+		pxa=partaa->pt*cos(partaa->phi0);
+		pya=partaa->pt*sin(partaa->phi0);
+		pxb=partbb->pt*cos(partbb->phi0);
+		pyb=partbb->pt*sin(partbb->phi0);
+		PX=pxa+pxb;
+		PY=pya+pyb;
+		phi=atan2(PY,PX);
+		pt=0.5*sqrt(PX*PX+PY*PY);
+		ipt=pt/DELPT;
+		if(ipt<NPT){
+			if(phi<0.0)
+				phi+=2.0*PI;
+			iphi=lrint(floor(phi*NPHI/(2.0*PI)));
+			if(iphi<0 || iphi>=NPHI || ipt<0 || ipt>=NPT || irap<0 || irap>=NRAP){
+				printf("oopsie\n");
+				exit(1);
+			}
+			return CFArray[irap][iphi][ipt];
 		}
+		else
+			return NULL;
 	}
 	else
 		return NULL;
@@ -199,20 +207,24 @@ CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
 }
 
 void CHBT_BES::AverageCF(){
-	long long int nsamplesum=0;
-	int iq,nsample;
+	long long int nsamplesum_qinv=0,nsamplesum_qout=0,nsamplesum_qside=0,nsamplesum_qlong=0;
+	CF *cfptr;
+	int iq;
 	cfbar->Reset();
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
 			for(int ipt=0;ipt<NPT;ipt++){
-				if(CFArray[irap][iphi][ipt]->nsample>0){
-					nsample=CFArray[irap][iphi][ipt]->nsample;
-					nsamplesum+=nsample;
+				cfptr=CFArray[irap][iphi][ipt];
+				if(cfptr->nsample_qinv>0){
+					nsamplesum_qinv+=cfptr->nsample_qinv;
+					nsamplesum_qout+=cfptr->nsample_qout;
+					nsamplesum_qside+=cfptr->nsample_qside;
+					nsamplesum_qlong+=cfptr->nsample_qlong;				
 					for(iq=0;iq<CF::NQ;iq++){
-						cfbar->cf_qinv[iq]+=CFArray[irap][iphi][ipt]->cf_qinv[iq]*nsample;
-						cfbar->cf_qout[iq]+=CFArray[irap][iphi][ipt]->cf_qout[iq]*nsample;
-						cfbar->cf_qside[iq]+=CFArray[irap][iphi][ipt]->cf_qside[iq]*nsample;
-						cfbar->cf_qlong[iq]+=CFArray[irap][iphi][ipt]->cf_qlong[iq]*nsample;
+						cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->nsample_qinv;
+						cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->nsample_qout;
+						cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->nsample_qside;
+						cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->nsample_qlong;
 						
 						if(CFArray[irap][iphi][ipt]->cf_qinv[iq] != CFArray[irap][iphi][ipt]->cf_qinv[iq]){
 							printf("irap=%d, iphi=%d, ipt=%d\n",irap,iphi,ipt);
@@ -220,17 +232,29 @@ void CHBT_BES::AverageCF(){
 							exit(1);
 						}
 					}
+					for(int ictheta=0;ictheta<10;ictheta++){
+						for(int iphir=0;iphir<18;iphir++){
+							cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->nsample_qinv;
+						}
+					}
 				}
 			}
 		}
 	}
 	for(iq=0;iq<CF::NQ;iq++){
-		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(nsamplesum);
-		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(nsamplesum);
-		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(nsamplesum);
-		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(nsamplesum);
+		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(nsamplesum_qinv);
+		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(nsamplesum_qout);
+		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(nsamplesum_qside);
+		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(nsamplesum_qlong);
 	}
+	printf("nsamplesum_qinv=%g, nsamplesum_qout=%g, nsamplesum_qside=%g, nsamplesum_qlong=%g\n",
+	double(nsamplesum_qinv),double(nsamplesum_qout),double(nsamplesum_qside),double(nsamplesum_qlong));
 	cfbar->Print();
+	for(int ictheta=0;ictheta<10;ictheta++){
+		for(int iphir=0;iphir<18;iphir++){
+			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(nsamplesum_qinv);
+		}
+	}
 }
 
 CHBT_Part::CHBT_Part(){
