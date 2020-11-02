@@ -12,12 +12,13 @@ void CHBT_BES::WriteCFs(){
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
 			for(ipt=0;ipt<NPT;ipt++){
-				sprintf(filename,"results/CFs/rap%g_phi%g_pt%g.txt",(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
+				sprintf(filename,"%s/CFs/rap%g_phi%g_pt%g.txt",RESULTS_DIR.c_str(),(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
 				CFArray[irap][iphi][ipt]->WriteCFs(string(filename));
 			}
 		}
 	}
-	cfbar->WriteCFs("results/CFs/average.txt");
+	sprintf(filename,"%s/CFs/average.txt",RESULTS_DIR.c_str());
+	cfbar->WriteCFs(string(filename));
 }
 
 void CHBT_BES::WriteThetaPhiDists(){
@@ -27,7 +28,7 @@ void CHBT_BES::WriteThetaPhiDists(){
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
 			for(ipt=0;ipt<NPT;ipt++){
-				sprintf(filename,"results/ThetaPhiDists/rap%g_phi%g_pt%g.txt",(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
+				sprintf(filename,"%s/ThetaPhiDists/rap%g_phi%g_pt%g.txt",RESULTS_DIR.c_str(),(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
 				CFArray[irap][iphi][ipt]->WriteThetaPhiDist(string(filename));
 			}
 		}

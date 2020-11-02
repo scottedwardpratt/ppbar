@@ -28,6 +28,7 @@ public:
 	
 	string INPUT_OSCAR_FILENAME;
 	string INPUT_OSCAR_BASE_DIRECTORY;
+	string RESULTS_DIR;
 	int NRAP,NPT,NPHI;
 	// YMAX should be BIGGER Than DELRAP*NRAP (so that for y>YMAX it can never average with another particle to be inside rapidity window)
 	double DELRAP,DELPT,YMAX;
@@ -64,7 +65,10 @@ class CF{
 public:
 	static int NQ;
 	static double DELQ;
-	static double OUTSIDELONG_DIRECTION_CUT;  // cos(theta) must be > 0.9
+	static double OUTSIDELONG_DIRECTION_CUT;  // cos(theta) must be > this value, theta is angle of q rel to axis
+	static double OUTSIDELONG_Q_CUT;
+	static bool USE_OUTSIDELONG_DIRECTION_CUT;
+	static bool USE_OUTSIDELONG_Q_CUT;
 	static CRandy *randy;
 	static CHBT_BES *hbt;
 	CWaveFunction *wf;

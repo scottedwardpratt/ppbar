@@ -2,8 +2,8 @@
 
 using namespace std;
 
-int main(){
-	CHBT_BES hbt("parameters.txt");
+int main(int argc, char *argv[]){
+	CHBT_BES hbt(string(argv[1]));
 	hbt.randy->reset(-time(NULL));
 	hbt.ReadPR();
 	hbt.CalcCF_MC();

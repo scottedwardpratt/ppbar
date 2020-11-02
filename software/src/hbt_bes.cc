@@ -14,6 +14,10 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::NQ=parmap->getI("Nqinv",100);
 	CF::DELQ=parmap->getD("DELqinv",2.0);
 	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
+	CF::OUTSIDELONG_Q_CUT=parmap->getD("OUTSIDELONG_Q_CUT",10.0);
+	CF::USE_OUTSIDELONG_DIRECTION_CUT=parmap->getB("USE_OUTSIDELONG_DIRECTION_CUT",false);
+	CF::USE_OUTSIDELONG_Q_CUT=parmap->getB("USE_OUTSIDELONG_Q_CUT",true);
+	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
 	NRAP=parmap->getI("NRAP",3);
 	DELRAP=parmap->getD("DELRAP",0.2);

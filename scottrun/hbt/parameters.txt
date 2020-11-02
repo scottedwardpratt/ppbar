@@ -10,7 +10,9 @@ NPT 20
 DELPT 100.0
 TAU_COMPARE 12.0
 INPUT_OSCAR_BASE_DIRECTORY ppbar/scottrun/runss/smash_output/AuAu19.6/
-OUTSIDELONG_DIRECTION_CUT 0.9
+OUTSIDELONG_DIRECTION_CUT false   #only one of these cuts should be true!
+OUTSIDELONG_Q_CUT true            #only one of these cuts should be true!
+RESULTS_DIR results_qcut
 OSCAR_NRUNS 24
 QARRAYFILENAME crap.txt
 DELQ 2.0

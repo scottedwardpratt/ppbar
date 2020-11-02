@@ -8,6 +8,9 @@ int CF::NQ=50;
 double CF::DELQ=2.0;
 CHBT_BES *CF::hbt=NULL;
 double CF::OUTSIDELONG_DIRECTION_CUT=0.9;
+double CF::OUTSIDELONG_Q_CUT=10.0;
+bool CF::USE_OUTSIDELONG_Q_CUT=true;
+bool CF::USE_OUTSIDELONG_DIRECTION_CUT=false;
 CRandy* CF::randy=NULL;
 
 CF::CF(){
@@ -34,7 +37,7 @@ void CF::Reset(){
 void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	int iq,ithetaphi,iphi,ictheta;
 	const int Nthetaphi=10;
-	double phi,ctheta,stheta,qx,qy,qz;
+	double phi,ctheta,stheta,qx,qy,qz,qinv;
 	double r,psisquared,ctheta_qr;
 	vector<double> x(4,0.0);
 	CalcXR(parta,partb,x,r);
@@ -47,6 +50,7 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			qz=ctheta;
 			qx=stheta*cos(phi);
 			qy=stheta*sin(phi);
+			qinv=(iq+0.5)*DELQ;
 			ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;		
 			for(iq=0;iq<NQ;iq++){
 				ctheta_qr=0.5;
@@ -60,17 +64,37 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 				}
 				cf_qinv[iq]+=psisquared;
 				nsample_qinv+=1;
-				if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
-					cf_qout[iq]+=psisquared;
-					nsample_qout+=1;
+				if(USE_OUTSIDELONG_DIRECTION_CUT){
+					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
+						cf_qout[iq]+=psisquared;
+						nsample_qout+=1;
+					}
+					if(fabs(qy)>OUTSIDELONG_DIRECTION_CUT){
+						cf_qside[iq]+=psisquared;
+						nsample_qside+=1;
+					}
+					if(fabs(qz)>OUTSIDELONG_DIRECTION_CUT){
+						cf_qlong[iq]+=psisquared;
+						nsample_qlong+=1;
+					}
 				}
-				if(fabs(qy)>OUTSIDELONG_DIRECTION_CUT){
-					cf_qside[iq]+=psisquared;
-					nsample_qside+=1;
-				}
-				if(fabs(qz)>OUTSIDELONG_DIRECTION_CUT){
-					cf_qlong[iq]+=psisquared;
-					nsample_qlong+=1;
+				if(USE_OUTSIDELONG_Q_CUT){
+					double qperp;
+					qperp=qinv*sqrt(1.0-qx*qx);
+					if(qperp<OUTSIDELONG_Q_CUT){
+						cf_qout[iq]+=psisquared;
+						nsample_qout+=1;
+					}
+					qperp=qinv*sqrt(1.0-qy*qy);
+					if(qperp<OUTSIDELONG_Q_CUT){
+						cf_qside[iq]+=psisquared;
+						nsample_qside+=1;
+					}
+					qperp=qinv*sqrt(1.0-qz*qz);
+					if(qperp<OUTSIDELONG_Q_CUT){
+						cf_qlong[iq]+=psisquared;
+						nsample_qlong+=1;
+					}
 				}
 			}
 		}
