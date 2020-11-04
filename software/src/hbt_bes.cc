@@ -12,7 +12,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
 	CF::NQ=parmap->getI("Nqinv",100);
-	CF::DELQ=parmap->getD("DELqinv",2.0);
+	CF::DELQ=parmap->getD("DELQ",2.0);
 	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
 	CF::OUTSIDELONG_Q_CUT=parmap->getD("OUTSIDELONG_Q_CUT",10.0);
 	CF::USE_OUTSIDELONG_DIRECTION_CUT=parmap->getB("USE_OUTSIDELONG_DIRECTION_CUT",false);
@@ -24,8 +24,8 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	NPT=parmap->getI("NPT",20);
 	DELPT=parmap->getD("DELPT",100.0);
 	YMAX=1.0;
-	IDA=parmap->getI("IDA",-2212);
-	IDB=parmap->getI("IDB",-2212);
+	IDA=parmap->getI("IDA",211);
+	IDB=parmap->getI("IDB",211);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
 	TAU_COMPARE=25.0;

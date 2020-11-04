@@ -1,7 +1,6 @@
 IDA 2212
 IDB 2212
 IDENTICAL true
-DELqinv 2.0
 Nqinv 50
 NPHI 18
 NRAP 3

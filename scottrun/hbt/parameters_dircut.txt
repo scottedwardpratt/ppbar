@@ -1,7 +1,6 @@
 IDA 2212
 IDB 2212
 IDENTICAL true
-DELqinv 2.0
 Nqinv 50
 NPHI 18
 NRAP 3
@@ -19,6 +18,6 @@ QARRAYFILENAME crap.txt
 DELQ 2.0
 NQMAX 50
 NEVENTS_MAX 200
-NMC 100000000
+NMC 10000000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc

@@ -33,7 +33,8 @@ void CHBT_BES::WriteThetaPhiDists(){
 			}
 		}
 	}
-	cfbar->WriteThetaPhiDist("results/ThetaPhiDists/average.txt");
+	sprintf(filename,"%s/ThetaPhiDists/average.txt",RESULTS_DIR.c_str());
+	cfbar->WriteThetaPhiDist(string(filename));
 }
 
 #endif

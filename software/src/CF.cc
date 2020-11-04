@@ -41,6 +41,10 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	double r,psisquared,ctheta_qr;
 	vector<double> x(4,0.0);
 	CalcXR(parta,partb,x,r);
+	//x[1]=7.0*randy->ran_gauss();
+	//x[2]=4.0*randy->ran_gauss();
+	//x[3]=6.0*randy->ran_gauss();
+	//r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
 	if(r==r && r!=0.0){
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
@@ -53,7 +57,6 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			qinv=(iq+0.5)*DELQ;
 			ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;		
 			for(iq=0;iq<NQ;iq++){
-				ctheta_qr=0.5;
 				psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
 				//psisquared=1.0;
 				if(psisquared!=psisquared){
@@ -194,7 +197,7 @@ void CF::Print(){
 	printf("----- CF ------, nsample_qinv=%d\n",nsample_qinv);
 	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
-		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",iq*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
+		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
 	}
 }
 
@@ -204,7 +207,7 @@ void CF::WriteCFs(string filename){
 	fprintf(fptr,"----- CF ------, nsample_qinv=%d\n",nsample_qinv);
 	fprintf(fptr,"q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
-		fprintf(fptr,"%7.3f %8.5f %8.5f %8.5f %8.5f\n",iq*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
+		fprintf(fptr,"%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
 	}
 	fclose(fptr);
 }
