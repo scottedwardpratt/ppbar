@@ -54,9 +54,9 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			qz=ctheta;
 			qx=stheta*cos(phi);
 			qy=stheta*sin(phi);
-			qinv=(iq+0.5)*DELQ;
 			ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;		
 			for(iq=0;iq<NQ;iq++){
+				qinv=(iq+0.5)*DELQ;
 				psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
 				//psisquared=1.0;
 				if(psisquared!=psisquared){
