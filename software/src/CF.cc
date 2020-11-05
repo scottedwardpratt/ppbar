@@ -18,6 +18,10 @@ CF::CF(){
 	cf_qout.resize(NQ);
 	cf_qside.resize(NQ);
 	cf_qlong.resize(NQ);
+	norm_qinv.resize(NQ);
+	norm_qout.resize(NQ);
+	norm_qside.resize(NQ);
+	norm_qlong.resize(NQ);
 	ThetaPhiDist.resize(10);
 	for(int ictheta=0;ictheta<10;ictheta++)
 		ThetaPhiDist[ictheta].resize(18);
@@ -25,9 +29,9 @@ CF::CF(){
 }
 
 void CF::Reset(){
-	nsample_qinv=nsample_qout=nsample_qside=nsample_qlong=0;
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
+		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0;
 	}
 	for(int ictheta=0;ictheta<10;ictheta++)
 		for(int iphi=0;iphi<18;iphi++)
@@ -42,8 +46,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	vector<double> x(4,0.0);
 	//CalcXR(parta,partb,x,r);
 	x[1]=7.0*randy->ran_gauss();
-	x[2]=4.0*randy->ran_gauss();
-	x[3]=6.0*randy->ran_gauss();
+	x[2]=5.0*randy->ran_gauss();
+	x[3]=5.0*randy->ran_gauss();
 	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
 	if(r==r && r!=0.0){
 		// Increment correlation function
@@ -54,7 +58,11 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 			qz=ctheta;
 			qx=stheta*cos(phi);
 			qy=stheta*sin(phi);
-			ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;		
+			ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;
+			if(fabs(ctheta_qr)>1.0){
+				printf("ctheta_qr out of range\n");
+				exit(1);
+			}		
 			for(iq=0;iq<NQ;iq++){
 				qinv=(iq+0.5)*DELQ;
 				psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
@@ -66,37 +74,38 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 					exit(1);
 				}
 				cf_qinv[iq]+=psisquared;
-				nsample_qinv+=1;
+				norm_qinv[iq]+=1;
+				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
 					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
 						cf_qout[iq]+=psisquared;
-						nsample_qout+=1;
+						norm_qout[iq]+=1;
 					}
 					if(fabs(qy)>OUTSIDELONG_DIRECTION_CUT){
 						cf_qside[iq]+=psisquared;
-						nsample_qside+=1;
+						norm_qside[iq]+=1;
 					}
 					if(fabs(qz)>OUTSIDELONG_DIRECTION_CUT){
 						cf_qlong[iq]+=psisquared;
-						nsample_qlong+=1;
+						norm_qlong[iq]+=1;
 					}
-				}
+				}*/
 				if(USE_OUTSIDELONG_Q_CUT){
 					double qperp;
 					qperp=qinv*sqrt(1.0-qx*qx);
 					if(qperp<OUTSIDELONG_Q_CUT){
 						cf_qout[iq]+=psisquared;
-						nsample_qout+=1;
+						norm_qout[iq]+=1;
 					}
 					qperp=qinv*sqrt(1.0-qy*qy);
 					if(qperp<OUTSIDELONG_Q_CUT){
 						cf_qside[iq]+=psisquared;
-						nsample_qside+=1;
+						norm_qside[iq]+=1;
 					}
 					qperp=qinv*sqrt(1.0-qz*qz);
 					if(qperp<OUTSIDELONG_Q_CUT){
 						cf_qlong[iq]+=psisquared;
-						nsample_qlong+=1;
+						norm_qlong[iq]+=1;
 					}
 				}
 			}
@@ -168,33 +177,35 @@ void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r)
 	
 }
 
-void CF::DivideByNSample(){
+void CF::Normalize(){
 	int iq;
-	if(nsample_qinv>0){
-		for(iq=0;iq<NQ;iq++){
-			cf_qinv[iq]=NQ*cf_qinv[iq]/double(nsample_qinv);
+	for(iq=0;iq<NQ;iq++){
+		if(norm_qinv[iq]>0){
+			cf_qinv[iq]=cf_qinv[iq]/double(norm_qinv[iq]);
 		}
-	}
-	if(nsample_qout>0){
-		for(iq=0;iq<NQ;iq++){
-			cf_qout[iq]=NQ*cf_qout[iq]/double(nsample_qout);
+		else
+			cf_qinv[iq]=0;
+		if(norm_qout[iq]>0){
+			cf_qout[iq]=cf_qout[iq]/double(norm_qout[iq]);
 		}
-	}
-	if(nsample_qside>0){
-		for(iq=0;iq<NQ;iq++){
-			cf_qside[iq]=NQ*cf_qside[iq]/double(nsample_qside);
+		else
+			cf_qout[iq]=0;
+		if(norm_qside[iq]>0){
+			cf_qside[iq]=cf_qside[iq]/double(norm_qside[iq]);
 		}
-	}
-	if(nsample_qlong>0){
-		for(iq=0;iq<NQ;iq++){
-			cf_qlong[iq]=NQ*cf_qlong[iq]/double(nsample_qlong);
+		else
+			cf_qside[iq]=0;
+		if(norm_qlong[iq]>0){
+			cf_qlong[iq]=cf_qlong[iq]/double(norm_qlong[iq]);
 		}
+		else
+			cf_qlong[iq]=0;
 	}
 }
 
 void CF::Print(){
 	int iq;
-	printf("----- CF ------, nsample_qinv=%d\n",nsample_qinv);
+	printf("----- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
 	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
@@ -204,7 +215,7 @@ void CF::Print(){
 void CF::WriteCFs(string filename){
 	FILE *fptr=fopen(filename.c_str(),"w");
 	int iq;
-	fprintf(fptr,"----- CF ------, nsample_qinv=%d\n",nsample_qinv);
+	fprintf(fptr,"----- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
 	fprintf(fptr,"q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		fprintf(fptr,"%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
@@ -237,6 +248,5 @@ void CF::WriteThetaPhiDist(string filename){
 	}
 	fclose(fptr);
 }
-
 
 #endif

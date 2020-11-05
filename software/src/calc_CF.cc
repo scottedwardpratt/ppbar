@@ -45,7 +45,7 @@ void CHBT_BES::CalcCF_MC(){
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
 			for(int ipt=0;ipt<NPT;ipt++){
-				CFArray[irap][iphi][ipt]->DivideByNSample();
+				CFArray[irap][iphi][ipt]->Normalize();
 			}
 		}
 	}

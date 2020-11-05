@@ -25,7 +25,7 @@ fig = plt.figure(1)
 ax = fig.add_axes([0.125,0.125,0.84,0.84])
 
 #filename='../results_'+sys.argv[1]+'/CFs/'+sys.argv[2]+'.txt'
-filename= "../results_qcut/CFs/average.txt"
+filename= "../results_gauss/CFs/average.txt"
 print('filename=',filename)
 
 mydata = np.loadtxt(filename,skiprows=2,unpack=True)
@@ -44,7 +44,7 @@ plt.xlim(0,100)
 ax.set_yticks(np.arange(0,2.0,0.5), minor=False)
 ax.set_yticklabels(np.arange(0,2.0,0.5), minor=False, family='serif')
 ax.set_yticks(np.arange(0,2.0,0.1), minor=True)
-plt.ylim(0,1.0)
+plt.ylim(0,1.2)
 
 plt.xlabel('$q$ (MeV/c)', labelpad=0, fontsize=24, weight='normal')
 plt.ylabel('$C(q)$',fontsize=24)
