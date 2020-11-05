@@ -13,7 +13,6 @@ int main(int argc,char *argv[]){
 	hbt.CalcCF_MC();
 	//hbt.CFArray[0][0][10]->Print();
 	hbt.AverageCF();
-	hbt.cfbar->Print();
 	hbt.WriteCFs();
 	hbt.WriteThetaPhiDists();
 	return 0;

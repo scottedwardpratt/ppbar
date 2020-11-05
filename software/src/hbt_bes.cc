@@ -11,7 +11,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	parmap=new CparameterMap();
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
-	CF::NQ=parmap->getI("Nqinv",100);
+	CF::NQ=parmap->getI("NQMAX",100);
 	CF::DELQ=parmap->getD("DELQ",2.0);
 	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
 	CF::OUTSIDELONG_Q_CUT=parmap->getD("OUTSIDELONG_Q_CUT",10.0);
@@ -211,26 +211,34 @@ CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
 }
 
 void CHBT_BES::AverageCF(){
-	long long int nsamplesum_qinv=0,nsamplesum_qout=0,nsamplesum_qside=0,nsamplesum_qlong=0;
 	CF *cfptr;
 	int iq;
+	vector<long long int> normsum_qinv,normsum_qout,normsum_qside,normsum_qlong;
+	long long int normsum_thetaphidist=0;
+	normsum_qinv.resize(CF::NQ);
+	normsum_qout.resize(CF::NQ);
+	normsum_qside.resize(CF::NQ);
+	normsum_qlong.resize(CF::NQ);
+	for(iq=0;iq<CF::NQ;iq++){
+		normsum_qinv[iq]=normsum_qout[iq]=normsum_qside[iq]=normsum_qlong[iq]=0;
+	}
 	cfbar->Reset();
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
 			for(int ipt=0;ipt<NPT;ipt++){
 				cfptr=CFArray[irap][iphi][ipt];
-				if(cfptr->nsample_qinv>0){
-					nsamplesum_qinv+=cfptr->nsample_qinv;
-					nsamplesum_qout+=cfptr->nsample_qout;
-					nsamplesum_qside+=cfptr->nsample_qside;
-					nsamplesum_qlong+=cfptr->nsample_qlong;				
+				if(cfptr->norm_qinv[0]>0){				
 					for(iq=0;iq<CF::NQ;iq++){
-						cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->nsample_qinv;
-						cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->nsample_qout;
-						cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->nsample_qside;
-						cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->nsample_qlong;
+						normsum_qinv[iq]+=cfptr->norm_qinv[iq];
+						normsum_qout[iq]+=cfptr->norm_qout[iq];
+						normsum_qside[iq]+=cfptr->norm_qside[iq];
+						normsum_qlong[iq]+=cfptr->norm_qlong[iq];
+						cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+						cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
+						cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
+						cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
 						
-						if(CFArray[irap][iphi][ipt]->cf_qinv[iq] != CFArray[irap][iphi][ipt]->cf_qinv[iq]){
+						if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
 							printf("irap=%d, iphi=%d, ipt=%d\n",irap,iphi,ipt);
 							CFArray[irap][iphi][ipt]->Print();
 							exit(1);
@@ -238,7 +246,8 @@ void CHBT_BES::AverageCF(){
 					}
 					for(int ictheta=0;ictheta<10;ictheta++){
 						for(int iphir=0;iphir<18;iphir++){
-							cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->nsample_qinv;
+							cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->norm_qinv[0];
+							normsum_thetaphidist+=normsum_qinv[0];
 						}
 					}
 				}
@@ -246,17 +255,16 @@ void CHBT_BES::AverageCF(){
 		}
 	}
 	for(iq=0;iq<CF::NQ;iq++){
-		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(nsamplesum_qinv);
-		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(nsamplesum_qout);
-		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(nsamplesum_qside);
-		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(nsamplesum_qlong);
+		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(normsum_qinv[iq]);
+		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(normsum_qout[iq]);
+		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(normsum_qside[iq]);
+		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(normsum_qlong[iq]);
 	}
-	printf("nsamplesum_qinv=%g, nsamplesum_qout=%g, nsamplesum_qside=%g, nsamplesum_qlong=%g\n",
-	double(nsamplesum_qinv),double(nsamplesum_qout),double(nsamplesum_qside),double(nsamplesum_qlong));
+	printf("normsum_qinv[0]=%g\n",double(normsum_qinv[0]));
 	cfbar->Print();
 	for(int ictheta=0;ictheta<10;ictheta++){
 		for(int iphir=0;iphir<18;iphir++){
-			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(nsamplesum_qinv);
+			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(normsum_thetaphidist);
 		}
 	}
 }

@@ -72,13 +72,13 @@ public:
 	static CRandy *randy;
 	static CHBT_BES *hbt;
 	CWaveFunction *wf;
-	int nsample_qinv,nsample_qout,nsample_qside,nsample_qlong;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
+	vector<long long int> norm_qinv,norm_qout,norm_qside,norm_qlong;
 	vector<vector<double>> ThetaPhiDist;
 	CF();
 	void CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r);
 	void Reset();
-	void DivideByNSample();
+	void Normalize();
 	void Print();
 	void WriteCFs(string filename);
 	void WriteThetaPhiDist(string filename);
