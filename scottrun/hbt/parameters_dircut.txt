@@ -15,9 +15,10 @@ USE_OUTSIDELONG_Q_CUT false
 OUTSIDELONG_Q_CUT 10.0
 OSCAR_NRUNS 24
 QARRAYFILENAME crap.txt
+RESULTS_DIR results_dircut
 DELQ 2.0
 NQMAX 50
 NEVENTS_MAX 200
-NMC 10000000
+NMC 1000000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc
