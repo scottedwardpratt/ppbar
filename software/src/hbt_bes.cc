@@ -17,6 +17,8 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::OUTSIDELONG_Q_CUT=parmap->getD("OUTSIDELONG_Q_CUT",10.0);
 	CF::USE_OUTSIDELONG_DIRECTION_CUT=parmap->getB("USE_OUTSIDELONG_DIRECTION_CUT",false);
 	CF::USE_OUTSIDELONG_Q_CUT=parmap->getB("USE_OUTSIDELONG_Q_CUT",true);
+	CF::Nxyz=100;
+	CF::Dxyz=0.5;
 	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
 	NRAP=parmap->getI("NRAP",3);
@@ -261,11 +263,15 @@ void CHBT_BES::AverageCF(){
 		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(normsum_qlong[iq]);
 	}
 	printf("normsum_qinv[0]=%g\n",double(normsum_qinv[0]));
-	cfbar->Print();
 	for(int ictheta=0;ictheta<10;ictheta++){
 		for(int iphir=0;iphir<18;iphir++){
 			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(normsum_thetaphidist);
 		}
+	}
+	for(int ixyz=0;ixyz<CF::Nxyz;ixyz++){
+		cfbar->source_out[ixyz]+=cfptr->source_out[ixyz];
+		cfbar->source_side[ixyz]+=cfptr->source_side[ixyz];
+		cfbar->source_long[ixyz]+=cfptr->source_long[ixyz];
 	}
 }
 

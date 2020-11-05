@@ -55,7 +55,6 @@ public:
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
-	
 	vector<vector<vector<CF *>>> CFArray;
 	void WriteThetaPhiDists();
 	CF *cfbar;
@@ -63,16 +62,18 @@ public:
 
 class CF{
 public:
-	static int NQ;
+	static int NQ,Nxyz;
 	static double DELQ;
 	static double OUTSIDELONG_DIRECTION_CUT;  // cos(theta) must be > this value, theta is angle of q rel to axis
 	static double OUTSIDELONG_Q_CUT;
+	static double Dxyz;
 	static bool USE_OUTSIDELONG_DIRECTION_CUT;
 	static bool USE_OUTSIDELONG_Q_CUT;
 	static CRandy *randy;
 	static CHBT_BES *hbt;
 	CWaveFunction *wf;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
+	vector<double> source_out,source_side,source_long;
 	vector<long long int> norm_qinv,norm_qout,norm_qside,norm_qlong;
 	vector<vector<double>> ThetaPhiDist;
 	CF();
@@ -82,6 +83,7 @@ public:
 	void Print();
 	void WriteCFs(string filename);
 	void WriteThetaPhiDist(string filename);
+	void PrintSourceProjections();
 	void Increment(CHBT_Part *parta,CHBT_Part *partb);
 };
 

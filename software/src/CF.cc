@@ -23,6 +23,9 @@ CF::CF(){
 	norm_qside.resize(NQ);
 	norm_qlong.resize(NQ);
 	ThetaPhiDist.resize(10);
+	source_out.resize(Nxyz);
+	source_side.resize(Nxyz);
+	source_long.resize(Nxyz);
 	for(int ictheta=0;ictheta<10;ictheta++)
 		ThetaPhiDist[ictheta].resize(18);
 	Reset();
@@ -36,10 +39,13 @@ void CF::Reset(){
 	for(int ictheta=0;ictheta<10;ictheta++)
 		for(int iphi=0;iphi<18;iphi++)
 			ThetaPhiDist[ictheta][iphi]=0.0;
+	for(int ixyz=0;ixyz<Nxyz;ixyz++){
+		source_out[ixyz]=source_side[ixyz]=source_long[ixyz]=0.0;
+	}
 }
 
 void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
-	int iq,ithetaphi,iphi,ictheta;
+	int iq,ithetaphi,iphi,ictheta,ixyz;
 	const int Nthetaphi=10;
 	double phi,ctheta,stheta,qx,qy,qz,qinv;
 	double r,psisquared,ctheta_qr;
@@ -49,6 +55,15 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	//x[2]=5.0*randy->ran_gauss();
 	//x[3]=5.0*randy->ran_gauss();
 	//r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+	ixyz=fabs(x[1])/Dxyz;
+	if(ixyz<Nxyz)
+		source_out[ixyz]+=1.0;
+	ixyz=fabs(x[2])/Dxyz;
+	if(ixyz<Nxyz)
+		source_out[ixyz]+=1.0;
+	ixyz=fabs(x[3])/Dxyz;
+	if(ixyz<Nxyz)
+		source_out[ixyz]+=1.0;
 	if(r==r && r!=0.0){
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
@@ -204,11 +219,16 @@ void CF::Normalize(){
 }
 
 void CF::Print(){
-	int iq;
-	printf("----- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
+	int iq,ixyz;
+	printf("#---- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
 	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
+	}
+	double scale=norm_qinv[0];
+	printf("# xyz     source_out     source_side   source_long\n");
+	for(ixyz=0;ixyz<Nxyz;ixyz++){
+		printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz]/scale,source_side[ixyz]/scale,source_long[ixyz]/scale);
 	}
 }
 
