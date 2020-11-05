@@ -11,6 +11,8 @@ double CF::OUTSIDELONG_DIRECTION_CUT=0.9;
 double CF::OUTSIDELONG_Q_CUT=10.0;
 bool CF::USE_OUTSIDELONG_Q_CUT=true;
 bool CF::USE_OUTSIDELONG_DIRECTION_CUT=false;
+double CF::Dxyz=0.5;
+int CF::Nxyz=100;
 CRandy* CF::randy=NULL;
 
 CF::CF(){
