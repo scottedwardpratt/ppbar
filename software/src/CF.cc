@@ -44,11 +44,11 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	double phi,ctheta,stheta,qx,qy,qz,qinv;
 	double r,psisquared,ctheta_qr;
 	vector<double> x(4,0.0);
-	//CalcXR(parta,partb,x,r);
-	x[1]=7.0*randy->ran_gauss();
-	x[2]=5.0*randy->ran_gauss();
-	x[3]=5.0*randy->ran_gauss();
-	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+	CalcXR(parta,partb,x,r);
+	//x[1]=7.0*randy->ran_gauss();
+	//x[2]=5.0*randy->ran_gauss();
+	//x[3]=5.0*randy->ran_gauss();
+	//r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
 	if(r==r && r!=0.0){
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
