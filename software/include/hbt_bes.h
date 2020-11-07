@@ -71,6 +71,7 @@ public:
 	static bool USE_OUTSIDELONG_Q_CUT;
 	static CRandy *randy;
 	static CHBT_BES *hbt;
+	long long int nincrement;
 	CWaveFunction *wf;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
 	vector<double> source_out,source_side,source_long;

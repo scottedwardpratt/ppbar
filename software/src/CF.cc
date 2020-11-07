@@ -34,6 +34,7 @@ CF::CF(){
 }
 
 void CF::Reset(){
+	nincrement=0;
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
 		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0;
@@ -57,15 +58,16 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	//x[2]=5.0*randy->ran_gauss();
 	//x[3]=5.0*randy->ran_gauss();
 	//r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+	nincrement+=1;
 	ixyz=fabs(x[1])/Dxyz;
 	if(ixyz<Nxyz)
 		source_out[ixyz]+=1.0;
 	ixyz=fabs(x[2])/Dxyz;
 	if(ixyz<Nxyz)
-		source_out[ixyz]+=1.0;
+		source_side[ixyz]+=1.0;
 	ixyz=fabs(x[3])/Dxyz;
 	if(ixyz<Nxyz)
-		source_out[ixyz]+=1.0;
+		source_long[ixyz]+=1.0;
 	if(r==r && r!=0.0){
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
@@ -171,16 +173,12 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 }*/
 
 void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r){
-	vector<double> pa=(partaa->p);
-	vector<double> pb=(partbb->p);
-	vector<double> xa=(partaa->x);
-	vector<double> xb=(partbb->x);
 	vector<double> P(4);
 	double M2=0.0,r2,Pdotx;
 	int alpha;
 	for(alpha=0;alpha<4;alpha++){
-		P[alpha]=pa[alpha]+pb[alpha];
-		x[alpha]=xa[alpha]-xb[alpha];
+		P[alpha]=partaa->p[alpha]+partbb->p[alpha];
+		x[alpha]=partaa->x[alpha]-partbb->x[alpha];
 	}
 	M2=P[0]*P[0]-P[1]*P[1]-P[2]*P[2]-P[3]*P[3];
 	Pdotx=P[0]*x[0]-P[1]*x[1]-P[2]*x[2]-P[3]*x[3];
@@ -227,10 +225,10 @@ void CF::Print(){
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
 	}
-	double scale=norm_qinv[0];
+	printf("nincrement=%lld\n",nincrement);
 	printf("# xyz     source_out     source_side   source_long\n");
 	for(ixyz=0;ixyz<Nxyz;ixyz++){
-		printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz]/scale,source_side[ixyz]/scale,source_long[ixyz]/scale);
+		printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz],source_side[ixyz],source_long[ixyz]);
 	}
 }
 
