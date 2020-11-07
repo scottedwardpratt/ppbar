@@ -29,10 +29,12 @@ filename= "../results_qcut/CFs/average.txt"
 print('filename=',filename)
 
 mydata = np.loadtxt(filename,skiprows=2,unpack=True)
-plt.plot(mydata[0],mydata[1],linestyle='-',linewidth=2,color='k')
-plt.plot(mydata[0],mydata[2],linestyle='-',linewidth=2,color='r')
-plt.plot(mydata[0],mydata[3],linestyle='-',linewidth=2,color='g')
-plt.plot(mydata[0],mydata[4],linestyle='-',linewidth=2,color='b')
+plt.plot(mydata[0],mydata[1],linestyle='-',linewidth=2,color='k',label='$q_{\\rm inv}$')
+plt.plot(mydata[0],mydata[2],linestyle='-',linewidth=2,color='r',label='$q_{\\rm out}$')
+plt.plot(mydata[0],mydata[3],linestyle='-',linewidth=2,color='g',label='$q_{\\rm side}$')
+plt.plot(mydata[0],mydata[4],linestyle='-',linewidth=2,color='b',label='$q_{\\rm long}$')
+
+plt.legend()
 
 ax.tick_params(axis='both', which='major', labelsize=18)
 
@@ -44,7 +46,7 @@ plt.xlim(0,100)
 ax.set_yticks(np.arange(0,2.0,0.5), minor=False)
 ax.set_yticklabels(np.arange(0,2.0,0.5), minor=False, family='serif')
 ax.set_yticks(np.arange(0,2.0,0.1), minor=True)
-plt.ylim(0,1.2)
+plt.ylim(0,1.4)
 
 plt.xlabel('$q$ (MeV/c)', labelpad=0, fontsize=24, weight='normal')
 plt.ylabel('$C(q)$',fontsize=24)
