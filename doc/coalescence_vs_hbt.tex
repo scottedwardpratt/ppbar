@@ -1,0 +1,77 @@
+\input{header.tex}
+
+\begin{document}
+
+\section{Coalescence vs Femtoscopic Correlations}
+
+There are several formalisms for Femtoscopy, and also several coalescence prescriptions. In the limit where the thermal momenta is much larger than the inverse characteristic source size, all the competing formalisms become identical -- unless a prescription is wrong. For femtoscopic correlations you can read \cite{Pratt:1997pw} a little study from the previous century. At that time the discussion centered around something called the ``smoothness approximation''. These issues of one formalism vs. another are relevant for $pp$ collisions, but irrelevant for central heavy-ion collisions. The variance in the results from any two formalisms is some times due to one being physically poorly motivated, but at some times it simply represents the systematic uncertainties associated with the approximations coming into play. The same approximations come into play when motivating a coalescence formalism. I should stress that the justification of approximations differs depending on whether the particles interact principally through the strong interaction, the Coulomb interaction, or (for HBT) via symmetrization. For coalescence, one also worries about whether the binding energy is much smaller than the temperature. In both instances, more theoretical uncertainty exists when the relative wave function has momentum components larger than the thermal momentum.
+
+The goal here is not to recount these rather subtle considerations, but to simply show how coalescence and femtoscopy provide similar (though not the same) information. This is most easily seen when expressing the correlations or spectra in terms of the phase space density taken at some time after emissions with third bodies has ended. For femtoscopy, the standard expression is:
+\begin{align*}\eqnumber
+C(\vec{p}_a,\vec{p}_b)&=\int d^3r~S(\vec{P}/2,\vec{r})|\phi_{\vec{q}}(\vec{r})|^2,\\
+S(\vec{P}/2,\vec{r})&=\frac{1}{\mathcal{N}^2}\int \frac{d^3r_ad^3r_b}{(2\pi\hbar)^6}~f(\vec{P}/2,\vec{r}_a)f(\vec{P}/2,\vec{r}_b)\delta(\vec{r}-(\vec{r}_a-\vec{r}_b)),\\
+\mathcal{N}&=\left.\frac{dN}{d^3p}\right|_{\vec{P}/2}.
+\end{align*}
+Here the total momentum is $\vec{P}=\vec{p}_a+\vec{p}_b$. With this definition, the source function $S(\vec{P}/2,\vec{r})$ integrates to unity,
+\begin{align*}\eqnumber
+\int d^3r~S(\vec{P}/2,\vec{r})&=1.
+\end{align*}
+It represents the probability that two particle of the same momentum $\vec{p}$ are separated by $\vec{r}$. The entire goal of femtoscopy is to determine $S(\vec{P}/2,\vec{r})$. The outgoing wave function has the property that for a plane wave it has unit norm, i.e. behaves as $e^{i\vec{q}\cdot\vec{r}}$, where $\vec{q}$ is the reduced relative momentum.
+
+For coalescence, the most common expression is (aside from the spin factor):
+\begin{align*}\eqnumber
+\frac{dN_D}{d^3P}&=\int \frac{d^3r_ad^3r_b}{(2\pi)^6} f(\vec{P}/2+\vec{q},\vec{r}_a)f(\vec{P}/2-\vec{q},\vec{r}_b)w_D(\vec{q},\vec{r}_a-\vec{r}_b)d^3q,\\
+w_D(\vec{q},\vec{r})&= \frac{1}{(2\pi)^3}\int d^3\delta r~e^{i\vec{q}\cdot\delta\vec{r}}\phi_D^*(\vec{r}+\delta\vec{r}/2)\phi_D(\vec{r}-\delta\vec{r}/2).
+\end{align*}
+Here, $\phi_D$ is the ground state wave function, normalized such that 
+\begin{align*}\eqnumber
+\int d^3r|\phi_D(\vec{r})|^2&=1,
+\end{align*}
+and $w_D$ is the Wigner decomposition, which has the property,
+\begin{align*}\eqnumber
+\int d^3q~w_D(\vec{q},\vec{r})&=|\phi_D(\vec{r})|^2.
+\end{align*}
+If the product $f(\vec{P}/2+\vec{q},\vec{r}_a)f(\vec{P}/2-\vec{q},\vec{r}_b)$ varies slowly with $\vec{q}$ (true for high temperatures), the deuteron spectra becomes
+\begin{align*}\eqnumber
+\frac{dN_D}{d^3P}&=\int \frac{d^3r_ad^3r_b}{(2\pi)^6} f(\vec{P}/2,\vec{r}_a)f(\vec{P}/2,\vec{r}_b)|\phi_D(\vec{r}_a-\vec{r}_b)|^2
+\end{align*}
+This last approximation is legitimate for the smoothness approximation. Or, in terms of the source function,
+\begin{align*}\eqnumber
+\frac{dN_D}{d^3P}&=\left(\left.\frac{dN}{d^3p}\right|_{\vec{P}/2}\right)^2
+\int d^3r S(\vec{r})|\phi_D(\vec{r})|^2.
+\end{align*}
+Thus, measuring the deuteron spectra gives you a measure of $S(\vec{r})$ for $\vec{r}\approx 0$. If the extent of the wave function is much smaller than the source, one gets
+\begin{align*}\eqnumber
+\frac{dN_D}{d^3P}&=\left(\left.\frac{dN}{d^3p}\right|_{\vec{P}/2}\right)^2 S(\vec{r}=0).
+\end{align*}
+Including spin considerations, there is an additional factor of 3/4 for deuterons.
+
+Beyond the measurement of proton and neutron spectra, the ONLY thing that coalescence provides is a measure of $S(\vec{r}=0)$, or some weighted average of $S(\vec{r}\approx 0)$ if the extent of the wave function is non-negligible. For a Gaussian source,
+\begin{align*}\eqnumber
+S(\vec{r})&=\frac{1}{(4\pi R^3)^{3/2}}e^{-r^2/4R^2},
+\end{align*}
+which when setting $r=0$ gives the $1/R^3$ factors you are used to seeing in some expressions, \cite{Llope:1995zz} 
+
+Finally, note that this gaussian radius is calculated for correlations in the frame of the pair. Most high-energy results quote Gaussian radii in the longitudinally co-moving frame. To correct for this $R^3=\gamma R_{\rm out}R_{\rm side}R_{\rm long}$.
+
+\begin{thebibliography}{99}
+
+%\cite{Pratt:1997pw}
+\bibitem{Pratt:1997pw}
+S.~Pratt,
+%``Validity of the smoothness assumption for calculating two-boson correlations in high-energy collisions,''
+Phys. Rev. C \textbf{56}, 1095-1098 (1997)
+doi:10.1103/PhysRevC.56.1095
+%32 citations counted in INSPIRE as of 07 Nov 2020
+
+%\cite{Llope:1995zz}
+\bibitem{Llope:1995zz}
+W.~J.~Llope, S.~E.~Pratt, N.~Frazier, R.~Pak, D.~Craig, E.~E.~Gualtieri, S.~A.~Hannuschke, N.~T.~B.~Stone, A.~M.~Vander Molen and G.~D.~Westfall, \textit{et al.}
+%``The fragment coalescence model,''
+Phys. Rev. C \textbf{52}, 2004-2012 (1995)
+doi:10.1103/PhysRevC.52.2004
+%49 citations counted in INSPIRE as of 07 Nov 2020
+
+\end{thebibliography}
+
+\end{document}
