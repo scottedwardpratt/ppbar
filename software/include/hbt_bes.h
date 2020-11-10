@@ -25,6 +25,7 @@ public:
 	CparameterMap *parmap;
 	CWaveFunction *wf;
 	CRandy *randy;
+	bool GAUSS;  // if true don't init stuff for reading in OSCAR output
 	
 	string INPUT_OSCAR_FILENAME;
 	string INPUT_OSCAR_BASE_DIRECTORY;
@@ -52,12 +53,14 @@ public:
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
 	void CalcCF_MC();
+	void CalcCF_Gauss(double Rout,double Rside, double Rlong);
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
 	vector<vector<vector<CF *>>> CFArray;
 	void WriteThetaPhiDists();
 	CF *cfbar;
+	CF *cfgauss;
 };
 
 class CF{
@@ -86,6 +89,7 @@ public:
 	void WriteThetaPhiDist(string filename);
 	void PrintSourceProjections();
 	void Increment(CHBT_Part *parta,CHBT_Part *partb);
+	void Increment(vector<double> &x);
 };
 
 #endif

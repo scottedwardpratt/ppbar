@@ -161,6 +161,77 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	}
 }
 
+void CF::Increment(vector<double> &x){
+
+	int iq,ithetaphi,iphi,ictheta;
+	const int Nthetaphi=10;
+	double phi,ctheta,stheta,qx,qy,qz,qinv,qperp;
+	double r,psisquared,ctheta_qr;
+	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+	nincrement+=1;
+
+	for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
+		phi=2.0*PI*randy->ran();
+		ctheta=-1.0+2.0*randy->ran();
+		stheta=sqrt(1.0-ctheta*ctheta);
+		qz=ctheta;
+		qx=stheta*cos(phi);
+		qy=stheta*sin(phi);
+		ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;
+		if(fabs(ctheta_qr)>1.0){
+			printf("ctheta_qr out of range\n");
+			exit(1);
+		}		
+		for(iq=0;iq<NQ;iq++){
+			qinv=(iq+0.5)*DELQ;
+			psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
+			//psisquared=1.0;
+			cf_qinv[iq]+=psisquared;
+			norm_qinv[iq]+=1;
+			if(USE_OUTSIDELONG_Q_CUT){
+				qperp=qinv*sqrt(1.0-qx*qx);
+				if(qperp<OUTSIDELONG_Q_CUT){
+					cf_qout[iq]+=psisquared;
+					norm_qout[iq]+=1;
+				}
+				qperp=qinv*sqrt(1.0-qy*qy);
+				if(qperp<OUTSIDELONG_Q_CUT){
+					cf_qside[iq]+=psisquared;
+					norm_qside[iq]+=1;
+				}
+				qperp=qinv*sqrt(1.0-qz*qz);
+				if(qperp<OUTSIDELONG_Q_CUT){
+					cf_qlong[iq]+=psisquared;
+					norm_qlong[iq]+=1;
+				}
+			}
+		}
+	}
+	// Increment ThetaPhiDist
+	if(r<20.0){
+		ctheta=x[3]/r;
+		phi=atan2(x[2],x[1]);
+		if(phi<0)
+			phi+=2.0*PI;
+		if(phi>PI){
+			phi=phi-PI;
+			ctheta=-ctheta;
+		}
+		ictheta=lrint(floor(5.0*(1.0+ctheta)));
+		iphi=lrint(floor(phi*18.0/PI));
+		if(ictheta<0 || ictheta>=int(ThetaPhiDist.size())){
+			printf("ictheta too big=%d\n",ictheta);
+			exit(1);
+		}
+		if(iphi<0 || iphi>=int(ThetaPhiDist[0].size())){
+			printf("iphi too big=%d\n",iphi);
+			exit(1);
+		}
+		ThetaPhiDist[ictheta][iphi]+=1.0;
+	}
+
+}
+
 /*void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r){
 	double dummy,gamma,gammav=0.5*((partaa->p[1]/partaa->mass)+(partbb->p[1]/partbb->mass));
 	gamma=sqrt(1.0+gammav*gammav);

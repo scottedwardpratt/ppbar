@@ -1,12 +1,7 @@
 IDA 2212
 IDB 2212
 IDENTICAL true
-NQMAX 1
-NPHI 18
-NRAP 3
-DELRAP 0.2
-NPT 20
-DELPT 100.0
+NQMAX 40
 TAU_COMPARE 12.0
 INPUT_OSCAR_BASE_DIRECTORY ppbar/scottrun/runss/smash_output/AuAu19.6/
 USE_OUTSIDELONG_DIRECTION_CUT false
@@ -22,3 +17,4 @@ NEVENTS_MAX 200
 NMC 100000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc
+GAUSS true

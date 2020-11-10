@@ -51,4 +51,23 @@ void CHBT_BES::CalcCF_MC(){
 	}
 }
 
+void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong){
+	int imc;
+	vector<double> x;
+	x.resize(4);
+	x[0]=0.0;
+	cfgauss->nincrement=0;
+	for(imc=0;imc<NMC;imc++){
+		x[1]=Rout*randy->ran_gauss();
+		x[2]=Rside*randy->ran_gauss();
+		x[3]=Rlong*randy->ran_gauss();
+		cfgauss->Increment(x);
+		if((10*(imc+1))%NMC==0){
+			printf("finished %g percent\n",100.0*(imc+1)/double(NMC));
+		}
+	}
+	cfgauss->Normalize();
+}
+
+
 #endif

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(hbt_ppbar CXX)
+project(hbt_gauss CXX)
 set(GITHOME_MSU $ENV{GITHOME_MSU})
 
 add_custom_target(extern_commonutils COMMAND make WORKING_DIRECTORY ${GITHOME_MSU}/commonutils/software)
@@ -22,13 +22,30 @@ find_library(${GITHOME_MSU}/commonutils/software/lib commonutils)
 find_library(${GITHOME_MSU}/coral/software/lib coral)
 find_library(${GITHOME_MSU}/ppbar/software/lib hbt_bes)
 
-set(SOURCE_FILES ./hbt_ppbar.cc)
+set(SOURCE_FILES ./hbt_gauss.cc)
 SET_SOURCE_FILES_PROPERTIES(
-	hbt_ppbar.cc PROPERTIES OBJECT_DEPENDS
+	hbt_gauss.cc PROPERTIES OBJECT_DEPENDS
 	${GITHOME_MSU}/ppbar/software/lib/libhbt_bes.a
 )
 
-add_executable(hbt_ppbar ${SOURCE_FILES})
-add_dependencies(hbt_ppbar extern_hbt_bes extern_coral extern_commonutils)
-target_link_libraries(hbt_ppbar hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+add_executable(hbt_gauss ${SOURCE_FILES})
+add_dependencies(hbt_gauss extern_hbt_bes extern_coral extern_commonutils)
+target_link_libraries(hbt_gauss hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
 
+#################################################
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+project(hbt_fromsmash CXX)
+set(GITHOME_MSU $ENV{GITHOME_MSU})
+
+link_directories(${GITHOME_MSU}/ppbar/software/lib ${GITHOME_MSU}/commonutils/software/lib ${GITHOME_MSU}/coral/software/lib)
+message("Libraries: b3d_bes  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}" )
+
+set(SOURCE_FILES ./hbt_fromsmash.cc)
+SET_SOURCE_FILES_PROPERTIES(
+	hbt_fromsmash.cc PROPERTIES OBJECT_DEPENDS
+	${GITHOME_MSU}/ppbar/software/lib/libhbt_bes.a
+)
+
+add_executable(hbt_fromsmash ${SOURCE_FILES})
+add_dependencies(hbt_fromsmash extern_hbt_bes extern_coral extern_commonutils)
+target_link_libraries(hbt_fromsmash hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})

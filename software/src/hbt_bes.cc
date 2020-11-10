@@ -11,6 +11,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	parmap=new CparameterMap();
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
+	GAUSS=parmap->getB("GAUSS",false);
 	CF::NQ=parmap->getI("NQMAX",100);
 	CF::DELQ=parmap->getD("DELQ",2.0);
 	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
@@ -59,20 +60,30 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		printf("fatal: IDs not recognized, IDA=%d, IDB=%d\n",IDA,IDB);
 		exit(1);
 	}
-	CFArray.resize(NRAP);
-	for(int irap=0;irap<NRAP;irap++){
-		CFArray[irap].resize(NPHI);
-		for(int iphi=0;iphi<NPHI;iphi++){
-			CFArray[irap][iphi].resize(NPT);
-			for(int ipt=0;ipt<NPT;ipt++){
-				CFArray[irap][iphi][ipt]=new CF();
-				CFArray[irap][iphi][ipt]->Reset();
-				CFArray[irap][iphi][ipt]->wf=wf;
+	
+	if(!GAUSS){
+		CFArray.resize(NRAP);
+		for(int irap=0;irap<NRAP;irap++){
+			CFArray[irap].resize(NPHI);
+			for(int iphi=0;iphi<NPHI;iphi++){
+				CFArray[irap][iphi].resize(NPT);
+				for(int ipt=0;ipt<NPT;ipt++){
+					CFArray[irap][iphi][ipt]=new CF();
+					CFArray[irap][iphi][ipt]->Reset();
+					CFArray[irap][iphi][ipt]->wf=wf;
+				}
 			}
 		}
+		cfbar=new CF();
+		cfbar->Reset();
+		cfbar->wf=wf;
 	}
-	cfbar=new CF();
-	cfbar->Reset();
+	else{
+		cfgauss=new CF();
+		cfgauss->nincrement=0;
+		cfgauss->Reset();
+		cfgauss->wf=wf;
+	}
 }
 
 void CHBT_BES::ReadPR(){
