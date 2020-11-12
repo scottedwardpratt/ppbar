@@ -34,7 +34,7 @@ CF::CF(){
 }
 
 void CF::Reset(){
-	nincrement=0;
+	nincrement=ndeuterons=0;
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
 		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0;
