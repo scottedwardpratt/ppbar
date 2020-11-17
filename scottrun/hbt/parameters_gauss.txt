@@ -14,7 +14,7 @@ RESULTS_DIR results_gauss
 DELQ 2.0
 NQMAX 50
 NEVENTS_MAX 200
-NMC 100000
+NMC 10000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc
 GAUSS true

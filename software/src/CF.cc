@@ -291,17 +291,20 @@ void CF::Normalize(){
 }
 
 void CF::Print(){
-	int iq,ixyz;
+	int iq;
 	printf("#---- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
 	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
 	}
 	printf("nincrement=%lld\n",nincrement);
+	/*
+	int ixyz;
 	printf("# xyz     source_out     source_side   source_long\n");
 	for(ixyz=0;ixyz<Nxyz;ixyz++){
 		printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz],source_side[ixyz],source_long[ixyz]);
 	}
+	*/
 }
 
 void CF::WriteCFs(string filename){
