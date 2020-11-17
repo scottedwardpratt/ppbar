@@ -6,8 +6,8 @@ NQMAX 50
 NPHI 18
 NRAP 6
 DELRAP 0.2
-NUPERP 40
-DELUPERP 0.05
+NUPERP 80      # no. of steps in Pt or uperp for binning CFs
+DELPT 50.0.    # total transverse momentum steps for binning
 UPERPTEST 0.01       #for determining if momenta are sufficiently close for HBT calc
 NSAMPLE_THETAPHI 4
 TAU_COMPARE 12.0
@@ -19,7 +19,7 @@ OUTSIDELONG_Q_CUT 10.0
 OSCAR_NRUNS 24
 QARRAYFILENAME crap.txt
 RESULTS_DIR results_qcut
-NEVENTS_MAX 2000000
+NEVENTS_MAX 1000
 NMC 100000
 RANSEED -12345
 COAL_SPIN_FACTOR 0.75

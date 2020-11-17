@@ -33,15 +33,16 @@ public:
 	string INPUT_OSCAR_BASE_DIRECTORY;
 	string RESULTS_DIR;
 	int NRAP,NUPERP,NPHI;
+	double MASSA,MASSB;
 	// YMAX should be BIGGER Than DELRAP*NRAP (so that for y>YMAX it can never average with another particle to be inside rapidity window)
-	double DELRAP,DELUPERP,DELPHI,YMAX;
+	double DELRAP,DELUPERP,DELPT,DELPHI,YMAX; 
 	int INPUT_OSCAR_NRUNS;
 	string OUTPUT_CF_FILENAME;
 	string GITHOME_MSU;
 	double TAU_COMPARE,UPERPTEST;
 	
 	// CF objects
-	int IDA,IDB,NEVENTS_MAX,NEVENTS;
+	int IDA,IDB,QAB,NEVENTS_MAX,NEVENTS;
 	long long NMC,NTRY;
 	double RANSEED;
 

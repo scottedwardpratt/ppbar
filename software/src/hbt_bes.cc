@@ -29,10 +29,12 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	NRAP=parmap->getI("NRAP",3);
 	DELRAP=parmap->getD("DELRAP",0.2);
 	NUPERP=parmap->getI("NUPERP",150);
-	DELUPERP=parmap->getD("DELUPERP",0.05);
-	YMAX=1.0;
+	DELPT=parmap->getD("DELPT",50.0);
 	IDA=parmap->getI("IDA",211);
 	IDB=parmap->getI("IDB",211);
+	MASSA=parmap->getD("MASSA",-12345.0);
+	MASSB=parmap->getD("MASSB",-12345.0);
+	QAB=parmap->getD("QAB",1);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
 	NTRY=0;
@@ -48,28 +50,37 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	
 	if((IDA==2212 && IDB==2212) || (IDA==-2212 && IDB==-2212)){
 		wf=new CWaveFunction_pp_schrod(parsfilename);
+		MASSA=MASSB=938.272;
 	}
 	else if((IDA==211 && IDB==211) || (IDA==-211 && IDB==-211)){
 		wf=new CWaveFunction_pipluspiplus_sqwell(parsfilename);
+		MASSA=MASSB=139.570;
 	}
 	else if((IDA==211 && IDB==-211) || (IDA==-211 && IDB==211)){
 		wf=new CWaveFunction_pipluspiminus_sqwell(parsfilename);
+		MASSA=MASSB=139.570;
 	}
 	else if((IDA==321 && IDB==321) || (IDA==-321 && IDB==-321)){
-		wf=new CWaveFunction_generic(parsfilename,1,493.677,493.677,1.0);
+		MASSA=MASSB=493.677;
+		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,1.0);
 	}
 	else if((IDA==321 && IDB==-321) || (IDA==-321 && IDB==321)){
-		wf=new CWaveFunction_generic(parsfilename,-1,493.677,493.677,1.0);
+		MASSA=MASSB=493.677;
+		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
+	}
+	else if((IDA==2212 && IDB==-2212) || (IDA==-2212 && IDB==2212)){
+		MASSA=MASSB=938.272;
+		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
 	}
 	else{
 		printf("fatal: IDs not recognized, IDA=%d, IDB=%d\n",IDA,IDB);
 		exit(1);
 	}
-	
 	partmap.resize(NRAP);
 	for(irap=0;irap<NRAP;irap++){
 		partmap[irap].resize(NPHI);
 	}
+	DELUPERP=DELPT/(MASSA+MASSB);
 	
 	if(!GAUSS){
 		CFArray.resize(NRAP);
@@ -116,6 +127,8 @@ void CHBT_BES::ReadPR(){
 		while(!feof(oscarfile) && NEVENTS<NEVENTS_MAX){
 			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&ievent,dumbo3,&nparts);
 			NEVENTS+=1;
+			if(NEVENTS==NEVENTS_MAX)
+				irun=INPUT_OSCAR_NRUNS;
 			//printf("nparts=%d\n",nparts);
 			fgets(dummy,160,oscarfile);
 			if(!feof(oscarfile)){
@@ -225,7 +238,7 @@ CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
 }
 
 void CHBT_BES::GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp){
-	irap=floorl(rap/DELRAP+0.5*NRAP);
+	irap=floorl((0.5*NRAP*DELRAP+rap)/DELRAP);
 	iphi=floorl((PI+phi)/DELPHI);
 	iuperp=floorl(uperp/DELUPERP);
 }
@@ -289,6 +302,7 @@ void CHBT_BES::AverageCF(){
 		cfbar->source_long[ixyz]+=cfptr->source_long[ixyz]/double(cfbar->nincrement);
 	}
 }
+
 /*
 void CHBT_BES::CalcCoalescenceSpectra(){
 	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
