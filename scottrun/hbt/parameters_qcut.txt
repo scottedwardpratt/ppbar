@@ -6,7 +6,7 @@ NQMAX 50
 NPHI 18
 NRAP 6
 DELRAP 0.2
-NUPERP 80      # no. of steps in Pt or uperp for binning CFs
+NUPERP 80      # no. of steps in Pt or uperp for binning CFs #
 DELPT 50.0.    # total transverse momentum steps for binning
 UPERPTEST 0.01       #for determining if momenta are sufficiently close for HBT calc
 NSAMPLE_THETAPHI 4
