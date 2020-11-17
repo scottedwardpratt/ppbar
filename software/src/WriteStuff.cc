@@ -7,13 +7,13 @@
 
 void CHBT_BES::WriteCFs(){
 	char filename[150];
-	int irap,iphi,ipt;
-	double DELPHI=360.0/double(NPHI);
+	int irap,iphi,iuperp;
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
-			for(ipt=0;ipt<NPT;ipt++){
-				sprintf(filename,"%s/CFs/rap%g_phi%g_pt%g.txt",RESULTS_DIR.c_str(),(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
-				CFArray[irap][iphi][ipt]->WriteCFs(string(filename));
+			for(iuperp=0;iuperp<NUPERP;iuperp++){
+				sprintf(filename,"%s/CFs/rap%g_phi%g_uperp%g.txt",RESULTS_DIR.c_str(),
+				(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI*180.0/PI,(iuperp+0.5)*DELUPERP);
+				CFArray[irap][iphi][iuperp]->WriteCFs(string(filename));
 			}
 		}
 	}
@@ -23,13 +23,12 @@ void CHBT_BES::WriteCFs(){
 
 void CHBT_BES::WriteThetaPhiDists(){
 	char filename[150];
-	int irap,iphi,ipt;
-	double DELPHI=360.0/double(NPHI);
+	int irap,iphi,iuperp;
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
-			for(ipt=0;ipt<NPT;ipt++){
-				sprintf(filename,"%s/ThetaPhiDists/rap%g_phi%g_pt%g.txt",RESULTS_DIR.c_str(),(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(ipt+0.5)*DELPT);
-				CFArray[irap][iphi][ipt]->WriteThetaPhiDist(string(filename));
+			for(iuperp=0;iuperp<NUPERP;iuperp++){
+				sprintf(filename,"%s/ThetaPhiDists/rap%g_phi%g_uperp%g.txt",RESULTS_DIR.c_str(),(irap+0.5)*DELRAP,(iphi+0.5)*DELPHI,(iuperp+0.5)*DELUPERP);
+				CFArray[irap][iphi][iuperp]->WriteThetaPhiDist(string(filename));
 			}
 		}
 	}

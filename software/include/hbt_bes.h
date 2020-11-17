@@ -7,13 +7,15 @@
 
 using namespace std;
 class CF;
+class CHBT_Part;
+typedef multimap<double,CHBT_Part *> CHBT_PartMap;
 
 class CHBT_Part{
 public:
 	CHBT_Part();
 	double rdummy;
 	int ID;
-	double mass,pt;
+	double mass,pt,uperp;
 	vector<double> p;
 	vector<double> x;
 	double rap0,phi0; // before particles boosted to rap=0 and phi=0.
@@ -30,26 +32,28 @@ public:
 	string INPUT_OSCAR_FILENAME;
 	string INPUT_OSCAR_BASE_DIRECTORY;
 	string RESULTS_DIR;
-	int NRAP,NPT,NPHI;
+	int NRAP,NUPERP,NPHI;
 	// YMAX should be BIGGER Than DELRAP*NRAP (so that for y>YMAX it can never average with another particle to be inside rapidity window)
-	double DELRAP,DELPT,YMAX;
+	double DELRAP,DELUPERP,DELPHI,YMAX;
 	int INPUT_OSCAR_NRUNS;
 	string OUTPUT_CF_FILENAME;
 	string GITHOME_MSU;
-	double TAU_COMPARE,QINVTEST;
+	double TAU_COMPARE,UPERPTEST;
 	
 	// CF objects
-	int IDA,IDB,NEVENTS_MAX,NMC;
+	int IDA,IDB,NEVENTS_MAX,NEVENTS;
+	long long NMC,NTRY;
 	double RANSEED;
-	
+
 	// Part List
 	vector<CHBT_Part *> parta;
 	vector<CHBT_Part *> partb;
+	vector<vector <CHBT_PartMap>> partmap;
 	
 	CHBT_BES(string parsfilename);
 	void ReadPR();
 	double Getqinv(vector<double> &pa,vector<double> &pb);
-	void AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &pread,vector<double> &xread);
+	void AddPart(int &IDread,vector<double> &pread,vector<double> &xread,double mass);
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
 	void CalcCF_MC();
@@ -57,6 +61,8 @@ public:
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
+	void CalcCoalescenceSpectra();
+	void GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp);
 	vector<vector<vector<CF *>>> CFArray;
 	void WriteThetaPhiDists();
 	CF *cfbar;
@@ -65,16 +71,17 @@ public:
 
 class CF{
 public:
-	static int NQ,Nxyz;
+	static int NQ,Nxyz,NSAMPLE_THETAPHI;
 	static double DELQ;
 	static double OUTSIDELONG_DIRECTION_CUT;  // cos(theta) must be > this value, theta is angle of q rel to axis
 	static double OUTSIDELONG_Q_CUT;
 	static double Dxyz;
 	static bool USE_OUTSIDELONG_DIRECTION_CUT;
 	static bool USE_OUTSIDELONG_Q_CUT;
+	static double Rcoalescence;
 	static CRandy *randy;
 	static CHBT_BES *hbt;
-	long long int nincrement,ndeuterons;
+	long long int nincrement,ncoalescence;
 	CWaveFunction *wf;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
 	vector<double> source_out,source_side,source_long;

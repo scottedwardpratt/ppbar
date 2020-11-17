@@ -6,6 +6,7 @@
 #include "hbt_bes.h"
 
 CHBT_BES::CHBT_BES(string parsfilename){
+	int irap,iphi,iuperp;
 	GITHOME_MSU=getenv("GITHOME_MSU");
 	printf("GITHOME_MSU=%s\n",GITHOME_MSU.c_str());
 	parmap=new CparameterMap();
@@ -20,23 +21,27 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::USE_OUTSIDELONG_Q_CUT=parmap->getB("USE_OUTSIDELONG_Q_CUT",true);
 	CF::Nxyz=100;
 	CF::Dxyz=0.5;
+	CF::Rcoalescence=parmap->getD("RCOALESCENCE",1.5);
+	CF::NSAMPLE_THETAPHI=parmap->getI("NSAMPLE_THETAPHI",4);
 	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
+	DELPHI=2.0*PI/double(NPHI);
 	NRAP=parmap->getI("NRAP",3);
 	DELRAP=parmap->getD("DELRAP",0.2);
-	NPT=parmap->getI("NPT",20);
-	DELPT=parmap->getD("DELPT",100.0);
+	NUPERP=parmap->getI("NUPERP",150);
+	DELUPERP=parmap->getD("DELUPERP",0.05);
 	YMAX=1.0;
 	IDA=parmap->getI("IDA",211);
 	IDB=parmap->getI("IDB",211);
 	NEVENTS_MAX=parmap->getI("NEVENTS_MAX",10);
 	NMC=parmap->getI("NMC",100000);
+	NTRY=0;
 	TAU_COMPARE=25.0;
 	INPUT_OSCAR_BASE_DIRECTORY=GITHOME_MSU+"/"+parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
 	INPUT_OSCAR_NRUNS=parmap->getI("OSCAR_NRUNS",24);
 	//RANSEED=parmap->getD("RANSEED",-12345);
 	RANSEED=-time(NULL);
-	QINVTEST=parmap->getD("QINVTEST",50.0);
+	UPERPTEST=parmap->getD("UPERPTEST",0.02);
 	randy=new CRandy(RANSEED);
 	CF::randy=randy;
 	CF::hbt=this;
@@ -61,16 +66,21 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		exit(1);
 	}
 	
+	partmap.resize(NRAP);
+	for(irap=0;irap<NRAP;irap++){
+		partmap[irap].resize(NPHI);
+	}
+	
 	if(!GAUSS){
 		CFArray.resize(NRAP);
-		for(int irap=0;irap<NRAP;irap++){
+		for(irap=0;irap<NRAP;irap++){
 			CFArray[irap].resize(NPHI);
-			for(int iphi=0;iphi<NPHI;iphi++){
-				CFArray[irap][iphi].resize(NPT);
-				for(int ipt=0;ipt<NPT;ipt++){
-					CFArray[irap][iphi][ipt]=new CF();
-					CFArray[irap][iphi][ipt]->Reset();
-					CFArray[irap][iphi][ipt]->wf=wf;
+			for(iphi=0;iphi<NPHI;iphi++){
+				CFArray[irap][iphi].resize(NUPERP);
+				for(iuperp=0;iuperp<NUPERP;iuperp++){
+					CFArray[irap][iphi][iuperp]=new CF();
+					CFArray[irap][iphi][iuperp]->Reset();
+					CFArray[irap][iphi][iuperp]->wf=wf;
 				}
 			}
 		}
@@ -88,13 +98,13 @@ CHBT_BES::CHBT_BES(string parsfilename){
 
 void CHBT_BES::ReadPR(){
 	int iskip,count;
-	int ipart,nparts,ID,nevents,charge,smashID,irun;
+	int ipart,nparts,ID,charge,smashID,ievent,irun;
 	char dummy[200],dumbo1[20],dumbo2[20],dumbo3[20];
-	double rap;
 	vector<double> p,x;
 	p.resize(4);
 	x.resize(4);
 	double mass;
+	NEVENTS=0;
 	FILE *oscarfile;
 	for(irun=0;irun<INPUT_OSCAR_NRUNS;irun++){
 		INPUT_OSCAR_FILENAME=INPUT_OSCAR_BASE_DIRECTORY+"run"+to_string(irun)+"/"+"0/particle_lists.oscar";
@@ -103,8 +113,9 @@ void CHBT_BES::ReadPR(){
 		for(iskip=0;iskip<3;iskip++){
 			fgets(dummy,200,oscarfile);
 		}
-		do{
-			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&nevents,dumbo3,&nparts);
+		while(!feof(oscarfile) && NEVENTS<NEVENTS_MAX){
+			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&ievent,dumbo3,&nparts);
+			NEVENTS+=1;
 			//printf("nparts=%d\n",nparts);
 			fgets(dummy,160,oscarfile);
 			if(!feof(oscarfile)){
@@ -115,62 +126,65 @@ void CHBT_BES::ReadPR(){
 					fgets(dummy,160,oscarfile);
 					//printf("check ipart=%d, ID=%d\n",ipart,ID);
 					if(ID==IDA){
-						rap=atanh(p[3]/p[0]);
-						if(fabs(rap)<YMAX)
-							AddPart(parta,ID,p,x);
+						AddPart(ID,p,x,mass);
 					}
 					else if(IDB!=IDA && ID==IDB){
-						rap=atanh(p[3]/p[0]);
-						if(fabs(rap)<YMAX)
-							AddPart(parta,ID,p,x);
+						AddPart(ID,p,x,mass);
 					}
 					count+=1;
 				}
 				fgets(dummy,200,oscarfile);
 			}
-		}while(!feof(oscarfile) && nevents<NEVENTS_MAX);
+		}
 		fclose(oscarfile);
 	}
 }
 
-void CHBT_BES::AddPart(vector<CHBT_Part *> &part,int &IDread,vector<double> &p,vector<double> &x){
+void CHBT_BES::AddPart(int &IDread,vector<double> &p,vector<double> &x,double mass){
 	CHBT_Part *newpart;
-	double rap0,phi0,pt,y,z,cphi,sphi,gamma,gammav;
-	newpart=new CHBT_Part();
-	part.push_back(newpart);
-	newpart->ID=IDread;
+	double rap0,phi0,uperp,pt,y,z,cphi,sphi,gamma,gammav;
+	int irap,iphi,iuperp;
+	rap0=atanh(p[3]/p[0]);
+	pt=sqrt(p[1]*p[1]+p[2]*p[2]);
+	uperp=pt/mass;	
+	phi0=atan2(p[2],p[1]);
+	GetIrapIphiIuperp(rap0,phi0,uperp,irap,iphi,iuperp);
 	for(int alpha=0;alpha<4;alpha++){
 		p[alpha]*=1000.0;
 	}
-	rap0=atanh(p[3]/p[0]);
+	mass*=1000.0;
 	
-	phi0=atan2(p[2],p[1]);
-	pt=sqrt(p[1]*p[1]+p[2]*p[2]);
-	cphi=cos(phi0);
-	sphi=sin(phi0);
-	//r=sqrt(x[1]*x[1]+x[2]*x[2]);
-	y=x[2];
-	x[2]=x[2]*cphi-x[1]*sphi;
-	x[1]=x[1]*cphi+y*sphi;
-	p[2]=0.0;
-	p[1]=pt;
-	gamma=cosh(rap0);
-	gammav=sinh(rap0);
-	p[0]=p[0]*gamma-gammav*p[3];
-	p[3]=0.0;
-	z=x[3];
-	x[3]=gamma*x[3]-gammav*x[0];
-	x[0]=gamma*x[0]-gammav*z;
-	x[1]=x[1]-(p[1]/p[0])*(x[0]-TAU_COMPARE);
-	x[0]=TAU_COMPARE;
-	for(int alpha=0;alpha<4;alpha++){
-		newpart->p[alpha]=p[alpha];
-		newpart->x[alpha]=x[alpha];
+	if(irap>=0 && irap<NRAP && iuperp<NUPERP){
+		newpart=new CHBT_Part();
+		newpart->ID=IDread;
+		cphi=cos(phi0);
+		sphi=sin(phi0);
+		y=x[2];
+		x[2]=x[2]*cphi-x[1]*sphi;
+		x[1]=x[1]*cphi+y*sphi;
+		p[2]=0.0;
+		p[1]=pt;
+		gamma=cosh(rap0);
+		gammav=sinh(rap0);
+		p[0]=p[0]*gamma-gammav*p[3];
+		p[3]=0.0;
+		z=x[3];
+		x[3]=gamma*x[3]-gammav*x[0];
+		x[0]=gamma*x[0]-gammav*z;
+		x[1]=x[1]-(p[1]/p[0])*(x[0]-TAU_COMPARE);
+		x[0]=TAU_COMPARE;
+		for(int alpha=0;alpha<4;alpha++){
+			newpart->p[alpha]=p[alpha];
+			newpart->x[alpha]=x[alpha];
+		}
+		newpart->mass=sqrt(p[0]*p[0]-pt*pt-p[3]*p[3]);
+		newpart->pt=pt;
+		newpart->uperp=uperp;
+		newpart->rap0=rap0;
+		newpart->phi0=phi0;
+		partmap[irap][iphi].insert(pair<double,CHBT_Part*>(uperp,newpart));
 	}
-	newpart->mass=sqrt(p[0]*p[0]-pt*pt-p[3]*p[3]);
-	newpart->pt=pt;
-	newpart->rap0=rap0;
-	newpart->phi0=phi0;
+	//part.push_back(newpart);
 }
 
 double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
@@ -191,35 +205,29 @@ double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
 }
 
 CF* CHBT_BES::GetCF(CHBT_Part *partaa,CHBT_Part *partbb){
-	double phi,pt,rap,pxa,pya,pxb,pyb,PX,PY;
-	int irap,iphi,ipt;
-	rap=0.5*(partaa->rap0+partbb->rap0);
-	irap=fabs(rap)/DELRAP;
-	if(irap<NRAP){
-		pxa=partaa->pt*cos(partaa->phi0);
-		pya=partaa->pt*sin(partaa->phi0);
-		pxb=partbb->pt*cos(partbb->phi0);
-		pyb=partbb->pt*sin(partbb->phi0);
-		PX=pxa+pxb;
-		PY=pya+pyb;
-		phi=atan2(PY,PX);
-		pt=0.5*sqrt(PX*PX+PY*PY);
-		ipt=pt/DELPT;
-		if(ipt<NPT){
-			if(phi<0.0)
-				phi+=2.0*PI;
-			iphi=lrint(floor(phi*NPHI/(2.0*PI)));
-			if(iphi<0 || iphi>=NPHI || ipt<0 || ipt>=NPT || irap<0 || irap>=NRAP){
-				printf("oopsie\n");
-				exit(1);
-			}
-			return CFArray[irap][iphi][ipt];
-		}
-		else
-			return NULL;
+	int irap,iphi,iuperp;
+	double phibar,delphi;
+	delphi=partaa->phi0-partbb->phi0;
+	phibar=0.5*(partaa->phi0+partbb->phi0);
+	if(fabs(delphi)>PI){
+		if(phibar>0.0)
+			phibar=phibar-PI;
+		if(phibar<0.0)				
+			phibar=phibar+PI;
+	}
+	GetIrapIphiIuperp(0.5*(partaa->rap0+partbb->rap0),phibar,0.5*(partaa->uperp+partbb->uperp),
+	irap,iphi,iuperp);
+	if(irap<NRAP && iuperp<NUPERP){
+		return CFArray[irap][iphi][iuperp];
 	}
 	else
 		return NULL;
+}
+
+void CHBT_BES::GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp){
+	irap=floorl(rap/DELRAP+0.5*NRAP);
+	iphi=floorl((PI+phi)/DELPHI);
+	iuperp=floorl(uperp/DELUPERP);
 }
 
 void CHBT_BES::AverageCF(){
@@ -229,8 +237,8 @@ void CHBT_BES::AverageCF(){
 	cfbar->Reset();
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
-			for(int ipt=0;ipt<NPT;ipt++){
-				cfptr=CFArray[irap][iphi][ipt];
+			for(int iuperp=0;iuperp<NUPERP;iuperp++){
+				cfptr=CFArray[irap][iphi][iuperp];
 				cfbar->nincrement+=cfptr->nincrement;
 				if(cfptr->norm_qinv[0]>0){
 					for(iq=0;iq<CF::NQ;iq++){
@@ -244,8 +252,8 @@ void CHBT_BES::AverageCF(){
 						cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
 						
 						if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
-							printf("irap=%d, iphi=%d, ipt=%d\n",irap,iphi,ipt);
-							CFArray[irap][iphi][ipt]->Print();
+							printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
+							CFArray[irap][iphi][iuperp]->Print();
 							exit(1);
 						}
 					}
@@ -281,6 +289,45 @@ void CHBT_BES::AverageCF(){
 		cfbar->source_long[ixyz]+=cfptr->source_long[ixyz]/double(cfbar->nincrement);
 	}
 }
+/*
+void CHBT_BES::CalcCoalescenceSpectra(){
+	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
+	double d3poverE;
+	double mass=938.28;
+	int iuperp,irap,iphi;
+	int namax=parta.size(),nbmax;
+	if(IDA!=IDB)
+		nbmax=partb.size();
+	else
+		nbmax=namax;
+	printf("Calculating Coalescence, namax=%d, nbmax=%d\n",namax,nbmax);
+	CF *cfptr;
+	double cfactor=COAL_SPIN_FACTOR/(double(NEVENTS)*double(NEVENTS)*double(NTRY));
+	cfactor=cfactor*double(namax)*double(nbmax);
+	cfactor=cfactor*9.0*PI/(16.0*pow(QINVTEST*CF::Rcoalescence/HBARC,3));
+	
+	vector<double> spectra;
+	spectra.resize(NUPERP);
+	for(iuperp=0;iuperp<NUPERP;iuperp++)
+		spectra[iuperp]=0.0;
+	
+	for(irap=0;irap<NRAP;irap++){
+		for(iphi=0;iphi<NPHI;iphi++){
+			for(iuperp=0;iuperp<NUPERP;iuperp++){
+				pt0=mass*iuperp*DELUPERP;
+				pt1=mass*(iuperp+1)*DELUPERP;
+				d3poverE=PI*NRAP*DELRAP*(pt1*pt1-pt0*pt0);
+				cfptr=CFArray[irap][iphi][iuperp];
+				spectra[iuperp]+=cfactor*double(cfptr->ncoalescence)/d3poverE;
+			}
+		}
+	}
+	for(iuperp=0;iuperp<NUPERP;iuperp++){
+		uperp=(iuperp+0.5)*DELPT;
+		printf("%6.2f %g\n",uperp,spectra[iuperp]);
+	}
+}
+*/
 
 CHBT_Part::CHBT_Part(){
 	p.resize(4);

@@ -12,7 +12,9 @@ double CF::OUTSIDELONG_Q_CUT=10.0;
 bool CF::USE_OUTSIDELONG_Q_CUT=true;
 bool CF::USE_OUTSIDELONG_DIRECTION_CUT=false;
 double CF::Dxyz=0.5;
+int CF::NSAMPLE_THETAPHI=4;
 int CF::Nxyz=100;
+double CF::Rcoalescence=1.5;
 CRandy* CF::randy=NULL;
 
 CF::CF(){
@@ -34,7 +36,7 @@ CF::CF(){
 }
 
 void CF::Reset(){
-	nincrement=ndeuterons=0;
+	nincrement=ncoalescence=0;
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
 		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0;
@@ -49,7 +51,6 @@ void CF::Reset(){
 
 void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	int iq,ithetaphi,iphi,ictheta,ixyz;
-	const int Nthetaphi=10;
 	double phi,ctheta,stheta,qx,qy,qz,qinv;
 	double r,psisquared,ctheta_qr;
 	vector<double> x(4,0.0);
@@ -70,7 +71,7 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 		source_long[ixyz]+=1.0;
 	if(r==r && r!=0.0){
 		// Increment correlation function
-		for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
+		for(ithetaphi=0;ithetaphi<NSAMPLE_THETAPHI;ithetaphi++){
 			phi=2.0*PI*randy->ran();
 			ctheta=-1.0+2.0*randy->ran();
 			stheta=sqrt(1.0-ctheta*ctheta);
@@ -94,6 +95,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 				}
 				cf_qinv[iq]+=psisquared;
 				norm_qinv[iq]+=1;
+				if(r<Rcoalescence)
+					ncoalescence+=1;
 				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
 					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
@@ -164,13 +167,12 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 void CF::Increment(vector<double> &x){
 
 	int iq,ithetaphi,iphi,ictheta;
-	const int Nthetaphi=10;
 	double phi,ctheta,stheta,qx,qy,qz,qinv,qperp;
 	double r,psisquared,ctheta_qr;
 	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
 	nincrement+=1;
 
-	for(ithetaphi=0;ithetaphi<Nthetaphi;ithetaphi++){
+	for(ithetaphi=0;ithetaphi<NSAMPLE_THETAPHI;ithetaphi++){
 		phi=2.0*PI*randy->ran();
 		ctheta=-1.0+2.0*randy->ran();
 		stheta=sqrt(1.0-ctheta*ctheta);
@@ -260,7 +262,6 @@ void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r)
 	r=sqrt(r2);
 	x[1]=sqrt(x[1]*x[1]-x[0]*x[0])*x[1]/fabs(x[1]);
 	x[0]=0.0;
-	
 }
 
 void CF::Normalize(){

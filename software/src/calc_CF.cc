@@ -5,47 +5,41 @@
 #include "hbt_bes.h"
 
 void CHBT_BES::CalcCF_MC(){
+	CHBT_PartMap::iterator ita,itb;
+	int irap,iphi,iuperp;
+	vector<double> x(4);
 	CHBT_Part *partaa,*partbb;
 	CF *cf;
-	int ia,ib,namax,nbmax;
-	long long int nsample=0;
-	double qinv;
-	bool success=false;
-	vector<double> x;
-	x.resize(4);
-	namax=parta.size();
-	nbmax=partb.size();
-	if(IDA==IDB)
-		nbmax=namax;
-	printf("Beginning calculation of correlation function, namax=%d, nbmax=%d, NQ=%d\n",namax,nbmax,CF::NQ);
-	while(nsample<NMC){
-		do{
-			ia=lrint(floor(namax*randy->ran()));
-			ib=lrint(floor(nbmax*randy->ran()));
-		}while(ia==ib && IDA==IDB);
-		partaa=parta[ia];
-		if(IDA!=IDB)
-			partbb=partb[ib];
-		else
-			partbb=parta[ib];
-		qinv=Getqinv(partaa->p,partbb->p);
-		if(qinv<QINVTEST){
-			cf=GetCF(partaa,partbb);
-			if(cf!=NULL){
-				nsample+=1;
-				success=true;
-				cf->Increment(partaa,partbb);
+	for(irap=0;irap<NRAP;irap++){
+		for(iphi=0;iphi<NPHI;iphi++){
+			printf("irap=%d, iphi=%d, size=%d\n",irap,iphi,int(partmap[irap][iphi].size()));
+			for(ita=partmap[irap][iphi].begin();ita!=partmap[irap][iphi].end();++ita){
+				partaa=ita->second;
+				if(partaa->ID==IDA || partaa->ID==IDB){
+					itb=ita; itb++;
+					partbb=itb->second;
+					while(itb!=partmap[irap][iphi].end() && fabs(partaa->uperp-partbb->uperp)<UPERPTEST){
+						partbb=itb->second;
+						if((partaa->ID==IDA && partbb->ID==IDB) || (partaa->ID==IDB && partbb->ID==IDA)){
+							cf=GetCF(partaa,partbb);
+							if(cf!=NULL){
+								if(partaa->ID==IDA){
+									cf->Increment(partaa,partbb);
+								}
+								else
+									cf->Increment(partbb,partaa);
+							}
+						}
+						itb++;
+					}
+				}
 			}
 		}
-		if((10*nsample)%NMC==0 && success==true){
-			printf("finished %g percent\n",100.0*nsample/double(NMC));
-			success=false;
-		}
 	}
-	for(int irap=0;irap<NRAP;irap++){
-		for(int iphi=0;iphi<NPHI;iphi++){
-			for(int ipt=0;ipt<NPT;ipt++){
-				CFArray[irap][iphi][ipt]->Normalize();
+	for(irap=0;irap<NRAP;irap++){
+		for(iphi=0;iphi<NPHI;iphi++){
+			for(iuperp=0;iuperp<NUPERP;iuperp++){
+				CFArray[irap][iphi][iuperp]->Normalize();
 			}
 		}
 	}
