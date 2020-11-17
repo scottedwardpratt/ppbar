@@ -14,7 +14,7 @@ int main(int argc,char *argv[]){
 	//hbt.CFArray[0][0][10]->Print();
 	hbt.AverageCF();
 	hbt.WriteCFs();
-	hbt.WriteThetaPhiDists();
+	//hbt.WriteThetaPhiDists();
 	hbt.cfbar->Print();
 	//hbt.CalcCoalescenceSpectra();
 	return 0;
