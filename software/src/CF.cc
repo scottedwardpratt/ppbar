@@ -70,6 +70,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	if(ixyz<Nxyz)
 		source_long[ixyz]+=1.0;
 	if(r==r && r!=0.0){
+		if(r<Rcoalescence)
+			ncoalescence+=1;
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<NSAMPLE_THETAPHI;ithetaphi++){
 			phi=2.0*PI*randy->ran();
@@ -95,8 +97,6 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 				}
 				cf_qinv[iq]+=psisquared;
 				norm_qinv[iq]+=1;
-				if(r<Rcoalescence)
-					ncoalescence+=1;
 				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
 					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){

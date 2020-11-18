@@ -21,7 +21,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::USE_OUTSIDELONG_Q_CUT=parmap->getB("USE_OUTSIDELONG_Q_CUT",true);
 	CF::Nxyz=100;
 	CF::Dxyz=0.5;
-	CF::Rcoalescence=parmap->getD("RCOALESCENCE",1.5);
+	CF::Rcoalescence=parmap->getD("RCOALESCENCE",2.0);
 	CF::NSAMPLE_THETAPHI=parmap->getI("NSAMPLE_THETAPHI",4);
 	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
@@ -303,11 +303,11 @@ void CHBT_BES::AverageCF(){
 	}
 }
 
-/*
 void CHBT_BES::CalcCoalescenceSpectra(){
 	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
-	double d3poverE;
-	double mass=938.28;
+	double Pt,uperp,D3q,gamma,D3PoverE,E,phi;
+	double mu=MASSA*MASSB/(MASSA+MASSB); // reduced mass
+	double Ebar=0.0,Ptbar=0.0,Enorm=0.0,V2=0.0;
 	int iuperp,irap,iphi;
 	int namax=parta.size(),nbmax;
 	if(IDA!=IDB)
@@ -316,10 +316,8 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 		nbmax=namax;
 	printf("Calculating Coalescence, namax=%d, nbmax=%d\n",namax,nbmax);
 	CF *cfptr;
-	double cfactor=COAL_SPIN_FACTOR/(double(NEVENTS)*double(NEVENTS)*double(NTRY));
-	cfactor=cfactor*double(namax)*double(nbmax);
-	cfactor=cfactor*9.0*PI/(16.0*pow(QINVTEST*CF::Rcoalescence/HBARC,3));
-	
+	double cfactor=COAL_SPIN_FACTOR/(double(NEVENTS)*double(NEVENTS));
+	cfactor=cfactor*pow(2.0*PI*HBARC,3)/(4.0*PI*pow(CF::Rcoalescence,3)/3.0);
 	vector<double> spectra;
 	spectra.resize(NUPERP);
 	for(iuperp=0;iuperp<NUPERP;iuperp++)
@@ -327,21 +325,33 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 	
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
+			phi=DELPHI*(iphi+0.5);
 			for(iuperp=0;iuperp<NUPERP;iuperp++){
-				pt0=mass*iuperp*DELUPERP;
-				pt1=mass*(iuperp+1)*DELUPERP;
-				d3poverE=PI*NRAP*DELRAP*(pt1*pt1-pt0*pt0);
 				cfptr=CFArray[irap][iphi][iuperp];
-				spectra[iuperp]+=cfactor*double(cfptr->ncoalescence)/d3poverE;
+				uperp=(iuperp+0.5)*DELUPERP;
+				Pt=(MASSA+MASSB)*uperp;
+				E=sqrt(Pt*Pt+(MASSA+MASSB)*(MASSA+MASSB));
+				Enorm+=spectra[iuperp];
+				Ebar+=E*spectra[iuperp];
+				Ptbar+=Pt*spectra[iuperp];
+				V2+=cos(2.0*phi);
+				gamma=sqrt(1.0+uperp*uperp);
+				D3q=((MASSA+MASSB)*gamma*DELRAP)*(Pt*DELPHI)*(mu*DELUPERP/gamma);
+				spectra[iuperp]+=cfactor*double(cfptr->ncoalescence)/D3q;
+				if(cfptr->ncoalescence!=0)
+					printf("%d,%d,%d, ncoalescence=%lld\n",irap,iphi,iuperp,cfptr->ncoalescence);
 			}
 		}
 	}
 	for(iuperp=0;iuperp<NUPERP;iuperp++){
-		uperp=(iuperp+0.5)*DELPT;
-		printf("%6.2f %g\n",uperp,spectra[iuperp]);
+		Pt=(iuperp+0.5)*DELPT;
+		E=sqrt(Pt*Pt+(MASSA+MASSB)*(MASSA+MASSB));
+		D3PoverE=DELPHI*DELRAP*Pt*Pt*DELPT/E;
+		spectra[iuperp]*=1.0E6*spectra[iuperp]/D3PoverE;
+		printf("%6.2f %g\n",Pt,spectra[iuperp]);
 	}
+	printf("For coalescence, <Et>=%g, <Pt>=%g, V2=%g\n",Ebar/Enorm,Ptbar/Enorm,V2/Enorm);
 }
-*/
 
 CHBT_Part::CHBT_Part(){
 	p.resize(4);
