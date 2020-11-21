@@ -10,7 +10,7 @@ int main(int argc,char *argv[]){
 	CHBT_BES hbt(argv[1]);
 	hbt.randy->reset(-time(NULL));
 	hbt.ReadPR();
-	hbt.CalcCF_MC();
+	hbt.CalcCF();
 	//hbt.CFArray[0][0][10]->Print();
 	hbt.AverageCF();
 	hbt.WriteCFs();

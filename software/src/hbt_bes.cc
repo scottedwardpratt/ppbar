@@ -7,6 +7,7 @@
 
 CHBT_BES::CHBT_BES(string parsfilename){
 	int irap,iphi,iuperp;
+	double D3q,mu,uperp;
 	GITHOME_MSU=getenv("GITHOME_MSU");
 	printf("GITHOME_MSU=%s\n",GITHOME_MSU.c_str());
 	parmap=new CparameterMap();
@@ -23,6 +24,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::Dxyz=0.5;
 	CF::Rcoalescence=parmap->getD("RCOALESCENCE",2.0);
 	CF::NSAMPLE_THETAPHI=parmap->getI("NSAMPLE_THETAPHI",4);
+	CF::COAL_USE_WF=parmap->getB("COAL_USE_WF",false);
 	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
 	DELPHI=2.0*PI/double(NPHI);
@@ -47,6 +49,20 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	randy=new CRandy(RANSEED);
 	CF::randy=randy;
 	CF::hbt=this;
+	Na.resize(NRAP);
+	Nb.resize(NRAP);
+	for(irap=0;irap<NRAP;irap++){
+		Na[irap].resize(NPHI);
+		Nb[irap].resize(NPHI);
+		for(iphi=0;iphi<NPHI;iphi++){
+			Na[irap][iphi].resize(NUPERP);
+			Nb[irap][iphi].resize(NUPERP);
+			for(iuperp=0;iuperp<NUPERP;iuperp++){
+				Na[irap][iphi][iuperp]=0;
+				Nb[irap][iphi][iuperp]=0;
+			}
+		}
+	}
 	
 	if((IDA==2212 && IDB==2212) || (IDA==-2212 && IDB==-2212)){
 		wf=new CWaveFunction_pp_schrod(parsfilename);
@@ -92,70 +108,33 @@ CHBT_BES::CHBT_BES(string parsfilename){
 					CFArray[irap][iphi][iuperp]=new CF();
 					CFArray[irap][iphi][iuperp]->Reset();
 					CFArray[irap][iphi][iuperp]->wf=wf;
+					uperp=(iuperp+0.5)*DELUPERP;
+					mu=MASSA*MASSB/(MASSA+MASSB);
+					D3q=2.0*mu*DELRAP;
+					D3q*=2.0*mu*uperp*DELPHI;
+					D3q*=2.0*mu*UPERPTEST;
+					CFArray[irap][iphi][iuperp]->D3q=D3q;
 				}
 			}
 		}
 		cfbar=new CF();
 		cfbar->Reset();
 		cfbar->wf=wf;
+		if(CF::COAL_USE_WF)
+			cfbar->CalcCoalWF();
 	}
 	else{
 		cfgauss=new CF();
 		cfgauss->nincrement=0;
 		cfgauss->Reset();
 		cfgauss->wf=wf;
-	}
-}
-
-void CHBT_BES::ReadPR(){
-	int iskip,count;
-	int ipart,nparts,ID,charge,smashID,ievent,irun;
-	char dummy[200],dumbo1[20],dumbo2[20],dumbo3[20];
-	vector<double> p,x;
-	p.resize(4);
-	x.resize(4);
-	double mass;
-	NEVENTS=0;
-	FILE *oscarfile;
-	for(irun=0;irun<INPUT_OSCAR_NRUNS;irun++){
-		INPUT_OSCAR_FILENAME=INPUT_OSCAR_BASE_DIRECTORY+"run"+to_string(irun)+"/"+"0/particle_lists.oscar";
-		oscarfile=fopen(INPUT_OSCAR_FILENAME.c_str(),"r");
-		printf("opening %s\n",INPUT_OSCAR_FILENAME.c_str());
-		for(iskip=0;iskip<3;iskip++){
-			fgets(dummy,200,oscarfile);
-		}
-		while(!feof(oscarfile) && NEVENTS<NEVENTS_MAX){
-			fscanf(oscarfile,"%s %s %d %s %d",dumbo1,dumbo2,&ievent,dumbo3,&nparts);
-			NEVENTS+=1;
-			if(NEVENTS==NEVENTS_MAX)
-				irun=INPUT_OSCAR_NRUNS;
-			//printf("nparts=%d\n",nparts);
-			fgets(dummy,160,oscarfile);
-			if(!feof(oscarfile)){
-				count=0;
-				for(ipart=0;ipart<nparts;ipart++){
-					fscanf(oscarfile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %d %d %d",
-					&x[0],&x[1],&x[2],&x[3],&mass,&p[0],&p[1],&p[2],&p[3],&ID,&smashID,&charge);
-					fgets(dummy,160,oscarfile);
-					//printf("check ipart=%d, ID=%d\n",ipart,ID);
-					if(ID==IDA){
-						AddPart(ID,p,x,mass);
-					}
-					else if(IDB!=IDA && ID==IDB){
-						AddPart(ID,p,x,mass);
-					}
-					count+=1;
-				}
-				fgets(dummy,200,oscarfile);
-			}
-		}
-		fclose(oscarfile);
+		cfgauss->D3q=1.0;
 	}
 }
 
 void CHBT_BES::AddPart(int &IDread,vector<double> &p,vector<double> &x,double mass){
 	CHBT_Part *newpart;
-	double rap0,phi0,uperp,pt,y,z,cphi,sphi,gamma,gammav;
+	double rap0,phi0,uperp,pt,y,z,cphi,sphi,gg,ggv;
 	int irap,iphi,iuperp;
 	rap0=atanh(p[3]/p[0]);
 	pt=sqrt(p[1]*p[1]+p[2]*p[2]);
@@ -177,13 +156,13 @@ void CHBT_BES::AddPart(int &IDread,vector<double> &p,vector<double> &x,double ma
 		x[1]=x[1]*cphi+y*sphi;
 		p[2]=0.0;
 		p[1]=pt;
-		gamma=cosh(rap0);
-		gammav=sinh(rap0);
-		p[0]=p[0]*gamma-gammav*p[3];
+		gg=cosh(rap0);
+		ggv=sinh(rap0);
+		p[0]=p[0]*gg-ggv*p[3];
 		p[3]=0.0;
 		z=x[3];
-		x[3]=gamma*x[3]-gammav*x[0];
-		x[0]=gamma*x[0]-gammav*z;
+		x[3]=gg*x[3]-ggv*x[0];
+		x[0]=gg*x[0]-ggv*z;
 		x[1]=x[1]-(p[1]/p[0])*(x[0]-TAU_COMPARE);
 		x[0]=TAU_COMPARE;
 		for(int alpha=0;alpha<4;alpha++){
@@ -196,8 +175,11 @@ void CHBT_BES::AddPart(int &IDread,vector<double> &p,vector<double> &x,double ma
 		newpart->rap0=rap0;
 		newpart->phi0=phi0;
 		partmap[irap][iphi].insert(pair<double,CHBT_Part*>(uperp,newpart));
+		if(newpart->ID==IDA)
+			Na[irap][iphi][iuperp]+=1;
+		if(newpart->ID==IDB)
+			Nb[irap][iphi][iuperp]+=1;
 	}
-	//part.push_back(newpart);
 }
 
 double CHBT_BES::Getqinv(vector<double> &pa,vector<double> &pb){
@@ -246,14 +228,13 @@ void CHBT_BES::GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,in
 void CHBT_BES::AverageCF(){
 	CF *cfptr;
 	int iq;
-	//long long int cfbar->norm_thetaphidist=0;
 	cfbar->Reset();
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
 			for(int iuperp=0;iuperp<NUPERP;iuperp++){
 				cfptr=CFArray[irap][iphi][iuperp];
 				cfbar->nincrement+=cfptr->nincrement;
-				if(cfptr->norm_qinv[0]>0){
+				if(cfptr->norm_qinv[0]>1.0E-20){
 					for(iq=0;iq<CF::NQ;iq++){
 						cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
 						cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
@@ -285,12 +266,12 @@ void CHBT_BES::AverageCF(){
 		}
 	}
 	for(iq=0;iq<CF::NQ;iq++){
-		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/double(cfbar->norm_qinv[iq]);
-		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/double(cfbar->norm_qout[iq]);
-		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/double(cfbar->norm_qside[iq]);
-		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/double(cfbar->norm_qlong[iq]);
+		cfbar->cf_qinv[iq]=cfbar->cf_qinv[iq]/cfbar->norm_qinv[iq];
+		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/cfbar->norm_qout[iq];
+		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/cfbar->norm_qside[iq];
+		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/cfbar->norm_qlong[iq];
 	}
-	printf("nincrement_sum=%lld, cfbar->norm_qinv[0]=%g\n",cfbar->nincrement,double(cfbar->norm_qinv[0]));
+	printf("nincrement_sum=%lld, cfbar->norm_qinv[0]=%g\n",cfbar->nincrement,cfbar->norm_qinv[0]);
 	for(int ictheta=0;ictheta<10;ictheta++){
 		for(int iphir=0;iphir<18;iphir++){
 			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(cfbar->nincrement);
@@ -305,52 +286,72 @@ void CHBT_BES::AverageCF(){
 
 void CHBT_BES::CalcCoalescenceSpectra(){
 	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
-	double Pt,uperp,D3q,gamma,D3PoverE,E,phi;
-	double mu=MASSA*MASSB/(MASSA+MASSB); // reduced mass
-	double Ebar=0.0,Ptbar=0.0,Enorm=0.0,V2=0.0;
+	double Pt,uperp,D3PoverE,D3PoverEa,D3PoverEb,E,phi,delN,uperp1,uperp0,mu=MASSA*MASSB/(MASSA+MASSB);;
+	double Ebar=0.0,Ptbar=0.0,EtPtnorm=0.0,V2=0.0;
 	int iuperp,irap,iphi;
-	int namax=parta.size(),nbmax;
-	if(IDA!=IDB)
-		nbmax=partb.size();
-	else
-		nbmax=namax;
-	printf("Calculating Coalescence, namax=%d, nbmax=%d\n",namax,nbmax);
 	CF *cfptr;
-	double cfactor=COAL_SPIN_FACTOR/(double(NEVENTS)*double(NEVENTS));
-	cfactor=cfactor*pow(2.0*PI*HBARC,3)/(4.0*PI*pow(CF::Rcoalescence,3)/3.0);
-	vector<double> spectra;
-	spectra.resize(NUPERP);
-	for(iuperp=0;iuperp<NUPERP;iuperp++)
-		spectra[iuperp]=0.0;
+	double cfactor;
+	//D3r=4.0*PI*pow(CF::Rcoalescence,3)/3.0; // Coalescence volume in coordinate space
+	vector<double> coalspectra,aspectra,bspectra,Rhbt;
+	coalspectra.resize(NUPERP);
+	aspectra.resize(NUPERP);
+	bspectra.resize(NUPERP);
+	Rhbt.resize(NUPERP);
+	for(iuperp=0;iuperp<NUPERP;iuperp++){
+		coalspectra[iuperp]=aspectra[iuperp]=bspectra[iuperp]=0.0;
+	}
 	
+	long long int ntot=0;
+	double ncoalraw=0,ncoal=0.0;
+	cfactor=COAL_SPIN_FACTOR*pow(2.0*PI*HBARC,3)/(double(NEVENTS)*double(NEVENTS));
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
 			phi=DELPHI*(iphi+0.5);
+			ntot+=partmap[irap][iphi].size();
 			for(iuperp=0;iuperp<NUPERP;iuperp++){
 				cfptr=CFArray[irap][iphi][iuperp];
 				uperp=(iuperp+0.5)*DELUPERP;
 				Pt=(MASSA+MASSB)*uperp;
 				E=sqrt(Pt*Pt+(MASSA+MASSB)*(MASSA+MASSB));
-				Enorm+=spectra[iuperp];
-				Ebar+=E*spectra[iuperp];
-				Ptbar+=Pt*spectra[iuperp];
-				V2+=cos(2.0*phi);
-				gamma=sqrt(1.0+uperp*uperp);
-				D3q=((MASSA+MASSB)*gamma*DELRAP)*(Pt*DELPHI)*(mu*DELUPERP/gamma);
-				spectra[iuperp]+=cfactor*double(cfptr->ncoalescence)/D3q;
-				if(cfptr->ncoalescence!=0)
-					printf("%d,%d,%d, ncoalescence=%lld\n",irap,iphi,iuperp,cfptr->ncoalescence);
+				delN=cfactor*cfptr->ncoalescence;
+				ncoal+=delN;
+				ncoalraw+=cfptr->ncoalescence;
+				if(IDA==IDB)
+					coalspectra[iuperp]+=2.0*delN;
+				else
+					coalspectra[iuperp]+=delN;
+				EtPtnorm+=delN;
+				Ebar+=E*delN;
+				Ptbar+=Pt*delN;
+				V2+=cos(2.0*phi)*delN;
+				aspectra[iuperp]+=Na[irap][iphi][iuperp];
+				bspectra[iuperp]+=Nb[irap][iphi][iuperp];
 			}
 		}
 	}
+	printf("ncoal=%g, ncoalraw=%g\n",ncoal,ncoalraw);
 	for(iuperp=0;iuperp<NUPERP;iuperp++){
 		Pt=(iuperp+0.5)*DELPT;
-		E=sqrt(Pt*Pt+(MASSA+MASSB)*(MASSA+MASSB));
-		D3PoverE=DELPHI*DELRAP*Pt*Pt*DELPT/E;
-		spectra[iuperp]*=1.0E6*spectra[iuperp]/D3PoverE;
-		printf("%6.2f %g\n",Pt,spectra[iuperp]);
+		D3PoverE=2.0*PI*NRAP*DELRAP*Pt*DELPT;
+		coalspectra[iuperp]=coalspectra[iuperp]/D3PoverE;
+		printf("%6.2f %g\n",Pt,coalspectra[iuperp]*1.0E6);
 	}
-	printf("For coalescence, <Et>=%g, <Pt>=%g, V2=%g\n",Ebar/Enorm,Ptbar/Enorm,V2/Enorm);
+	printf("For coalescence, <Et>=%g, <Pt>=%g, V2=%g\n",Ebar/EtPtnorm,Ptbar/EtPtnorm,V2/EtPtnorm);
+	printf("ntot=%lld\n",ntot);
+	mu=MASSA*MASSB/(MASSA+MASSB);
+	cfactor=pow(PI*HBARC*HBARC,1.5)*COAL_SPIN_FACTOR/mu;
+	for(iuperp=0;iuperp<NUPERP;iuperp++){
+		uperp0=iuperp*DELUPERP;
+		uperp1=(iuperp+1)*DELUPERP;
+		D3PoverEa=DELRAP*NRAP*2.0*PI*MASSA*MASSA*PI*(uperp1*uperp1-uperp0*uperp0);
+		D3PoverEb=DELRAP*NRAP*2.0*PI*MASSB*MASSB*PI*(uperp1*uperp1-uperp0*uperp0);
+		aspectra[iuperp]=aspectra[iuperp]/(NEVENTS*D3PoverEa);
+		bspectra[iuperp]=bspectra[iuperp]/(NEVENTS*D3PoverEb);
+		Rhbt[iuperp]=cfactor*aspectra[iuperp]*aspectra[iuperp]/coalspectra[iuperp];
+		Rhbt[iuperp]=pow(Rhbt[iuperp],1.0/3.0);
+		Pt=(MASSA+MASSB)*(iuperp+0.5)*DELUPERP;
+		printf("%7.1f %7.4f\n",Pt,Rhbt[iuperp]);
+	}
 }
 
 CHBT_Part::CHBT_Part(){

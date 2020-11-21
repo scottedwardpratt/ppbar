@@ -12,9 +12,12 @@ double CF::OUTSIDELONG_Q_CUT=10.0;
 bool CF::USE_OUTSIDELONG_Q_CUT=true;
 bool CF::USE_OUTSIDELONG_DIRECTION_CUT=false;
 double CF::Dxyz=0.5;
+bool CF::COAL_USE_WF=false;
+vector<double> CF::psi_coal={};
 int CF::NSAMPLE_THETAPHI=4;
 int CF::Nxyz=100;
 double CF::Rcoalescence=1.5;
+double CF::COAL_DELR=0.05;
 CRandy* CF::randy=NULL;
 
 CF::CF(){
@@ -39,7 +42,7 @@ void CF::Reset(){
 	nincrement=ncoalescence=0;
 	for(int iq=0;iq<NQ;iq++){
 		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
-		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0;
+		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0.0;
 	}
 	for(int ictheta=0;ictheta<10;ictheta++)
 		for(int iphi=0;iphi<18;iphi++)
@@ -70,8 +73,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	if(ixyz<Nxyz)
 		source_long[ixyz]+=1.0;
 	if(r==r && r!=0.0){
-		if(r<Rcoalescence)
-			ncoalescence+=1;
+		ncoalescence+=CoalescenceWeight(r);
+		
 		// Increment correlation function
 		for(ithetaphi=0;ithetaphi<NSAMPLE_THETAPHI;ithetaphi++){
 			phi=2.0*PI*randy->ran();
@@ -95,8 +98,8 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 					printf("---------- psisquared = %g ------------\n",psisquared);
 					exit(1);
 				}
-				cf_qinv[iq]+=psisquared;
-				norm_qinv[iq]+=1;
+				cf_qinv[iq]+=psisquared/D3q;
+				norm_qinv[iq]+=1.0/D3q;
 				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
 					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
@@ -116,18 +119,18 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 					double qperp;
 					qperp=qinv*sqrt(1.0-qx*qx);
 					if(qperp<OUTSIDELONG_Q_CUT){
-						cf_qout[iq]+=psisquared;
-						norm_qout[iq]+=1;
+						cf_qout[iq]+=psisquared/D3q;
+						norm_qout[iq]+=1.0/D3q;
 					}
 					qperp=qinv*sqrt(1.0-qy*qy);
 					if(qperp<OUTSIDELONG_Q_CUT){
-						cf_qside[iq]+=psisquared;
-						norm_qside[iq]+=1;
+						cf_qside[iq]+=psisquared/D3q;
+						norm_qside[iq]+=1.0/D3q;
 					}
 					qperp=qinv*sqrt(1.0-qz*qz);
 					if(qperp<OUTSIDELONG_Q_CUT){
-						cf_qlong[iq]+=psisquared;
-						norm_qlong[iq]+=1;
+						cf_qlong[iq]+=psisquared/D3q;
+						norm_qlong[iq]+=1.0/D3q;
 					}
 				}
 			}
@@ -152,7 +155,7 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 				printf("iphi too big=%d\n",iphi);
 				exit(1);
 			}
-			ThetaPhiDist[ictheta][iphi]+=1.0;
+			ThetaPhiDist[ictheta][iphi]+=1.0/D3q;
 		}
 	}
 	else{
@@ -188,23 +191,23 @@ void CF::Increment(vector<double> &x){
 			qinv=(iq+0.5)*DELQ;
 			psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
 			//psisquared=1.0;
-			cf_qinv[iq]+=psisquared;
-			norm_qinv[iq]+=1;
+			cf_qinv[iq]+=psisquared/D3q;
+			norm_qinv[iq]+=1.0/D3q;
 			if(USE_OUTSIDELONG_Q_CUT){
 				qperp=qinv*sqrt(1.0-qx*qx);
 				if(qperp<OUTSIDELONG_Q_CUT){
-					cf_qout[iq]+=psisquared;
-					norm_qout[iq]+=1;
+					cf_qout[iq]+=psisquared/D3q;
+					norm_qout[iq]+=1.0/D3q;
 				}
 				qperp=qinv*sqrt(1.0-qy*qy);
 				if(qperp<OUTSIDELONG_Q_CUT){
-					cf_qside[iq]+=psisquared;
-					norm_qside[iq]+=1;
+					cf_qside[iq]+=psisquared/D3q;
+					norm_qside[iq]+=1.0/D3q;
 				}
 				qperp=qinv*sqrt(1.0-qz*qz);
 				if(qperp<OUTSIDELONG_Q_CUT){
-					cf_qlong[iq]+=psisquared;
-					norm_qlong[iq]+=1;
+					cf_qlong[iq]+=psisquared/D3q;
+					norm_qlong[iq]+=1.0/D3q;
 				}
 			}
 		}
@@ -234,17 +237,6 @@ void CF::Increment(vector<double> &x){
 
 }
 
-/*void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r){
-	double dummy,gamma,gammav=0.5*((partaa->p[1]/partaa->mass)+(partbb->p[1]/partbb->mass));
-	gamma=sqrt(1.0+gammav*gammav);
-	for(int alpha=0;alpha<4;alpha++)
-		x[alpha]=partaa->x[alpha]-partbb->x[alpha];
-	dummy=x[0];
-	x[0]=gamma*dummy-gammav*x[1];
-	x[1]=gamma*x[1]-gammav*dummy;
-	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
-}*/
-
 void CF::CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r){
 	vector<double> P(4);
 	double M2=0.0,r2,Pdotx;
@@ -268,22 +260,22 @@ void CF::Normalize(){
 	int iq;
 	for(iq=0;iq<NQ;iq++){
 		if(norm_qinv[iq]>0){
-			cf_qinv[iq]=cf_qinv[iq]/double(norm_qinv[iq]);
+			cf_qinv[iq]=cf_qinv[iq]/norm_qinv[iq];
 		}
 		else
 			cf_qinv[iq]=0;
-		if(norm_qout[iq]>0){
-			cf_qout[iq]=cf_qout[iq]/double(norm_qout[iq]);
+		if(norm_qout[iq]>1.0E-20){
+			cf_qout[iq]=cf_qout[iq]/norm_qout[iq];
 		}
 		else
 			cf_qout[iq]=0;
-		if(norm_qside[iq]>0){
-			cf_qside[iq]=cf_qside[iq]/double(norm_qside[iq]);
+		if(norm_qside[iq]>1.0E-20){
+			cf_qside[iq]=cf_qside[iq]/norm_qside[iq];
 		}
 		else
 			cf_qside[iq]=0;
-		if(norm_qlong[iq]>0){
-			cf_qlong[iq]=cf_qlong[iq]/double(norm_qlong[iq]);
+		if(norm_qlong[iq]>1.0E-20){
+			cf_qlong[iq]=cf_qlong[iq]/norm_qlong[iq];
 		}
 		else
 			cf_qlong[iq]=0;
@@ -292,7 +284,7 @@ void CF::Normalize(){
 
 void CF::Print(){
 	int iq;
-	printf("#---- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
+	printf("#---- CF ------, norm_qinv=%g\n",norm_qinv[0]);
 	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
@@ -310,7 +302,7 @@ void CF::Print(){
 void CF::WriteCFs(string filename){
 	FILE *fptr=fopen(filename.c_str(),"w");
 	int iq;
-	fprintf(fptr,"----- CF ------, norm_qinv=%lld\n",norm_qinv[0]);
+	fprintf(fptr,"----- CF ------, norm_qinv=%g\n",norm_qinv[0]);
 	fprintf(fptr,"q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
 	for(iq=0;iq<NQ;iq++){
 		fprintf(fptr,"%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
@@ -342,6 +334,78 @@ void CF::WriteThetaPhiDist(string filename){
 		fprintf(fptr,"\n");
 	}
 	fclose(fptr);
+}
+
+double CF::CoalescenceWeight(double r){
+	double weight;
+	int nr=psi_coal.size();
+	if(COAL_USE_WF){
+		int ir;
+		ir=floorl(r/COAL_DELR);
+		if(ir<nr){
+			weight=psi_coal[ir]*psi_coal[ir]/D3q;
+		}
+		else
+			weight=0.0;
+	}
+	else{
+		weight=exp(-0.5*r*r/(Rcoalescence*Rcoalescence));
+		weight=weight/(D3q*pow(2.0*PI*Rcoalescence*Rcoalescence,1.5));
+	}
+	return weight;
+}
+
+void CF::CalcCoalWF(){
+	COAL_DELR=0.05;
+	double root4pi=sqrt(4.0*PI);
+	const int nr=1000;
+	int ir,ntries=0;
+	psi_coal.resize(nr);
+	double A,C;   // prefactors
+	double B=2.24;   // binding energy
+	double mu=0.5*939.0;  // reduced mass
+	double a=1.0;    // well width
+	double k,q;  // wave number inside/outside well
+	double f,dfdk,dk,norm,r;
+	q=sqrt(2.0*mu*B)/HBARC;
+	k=2.0/a;   // a guess
+	f=1.0+(q/k)*tan(k*a);
+	do{
+		ntries+=1;
+		dfdk=-(q/(k*k))*tan(k*a)+(q*a/k)/pow(cos(k*a),2);
+		dk=-f/dfdk;
+		if(fabs(dk)>0.05)
+			dk=0.05*dk/fabs(dk);
+		k+=dk;
+		f=1.0+(q/k)*tan(k*a);
+		//printf("k=%g, f=%g\n",k,f);
+	}while(fabs(f)>1.0E-12 && ntries<100);
+	if(ntries==100){
+		printf("Coalescence WF calculation failed to converge, will exit\n");
+		exit(1);
+	}
+	A=1.0/(sqrt(a)*sin(k*a));
+	norm=A*A*((0.5/a)-(0.25/k)*sin(2.0*k*a));
+	norm+=0.5/q;
+	A=A/sqrt(norm);
+	C=1.0/sqrt(a*norm);
+	for(ir=0;ir<nr;ir++){
+		r=(ir+0.5)*COAL_DELR;
+		if(r<a)
+			psi_coal[ir]=A*sin(k*r);
+		else
+			psi_coal[ir]=C*exp(-q*(r-a));
+		psi_coal[ir]=psi_coal[ir]/(root4pi*r);
+	}
+	double normcheck=0.0;
+	for(ir=0;ir<nr;ir++){
+		r=(0.5+ir)*COAL_DELR;
+		normcheck+=COAL_DELR*4.0*PI*r*r*psi_coal[ir]*psi_coal[ir];
+	}
+	if(fabs(normcheck-1.0)>1.0E-5){
+		printf("normcheck=%g\n",normcheck);
+		exit(1);
+	}
 }
 
 #endif

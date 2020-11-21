@@ -4,17 +4,20 @@
 #include "coral.h"
 #include "hbt_bes.h"
 
-void CHBT_BES::CalcCF_MC(){
+void CHBT_BES::CalcCF(){
 	CHBT_PartMap::iterator ita,itb;
 	int irap,iphi,iuperp;
 	vector<double> x(4);
 	CHBT_Part *partaa,*partbb;
 	CF *cf;
+	long long int ntot=0,ntotprime=0;
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
-			printf("irap=%d, iphi=%d, size=%d\n",irap,iphi,int(partmap[irap][iphi].size()));
+			ntot+=partmap[irap][iphi].size();
+			printf("irap=%d, iphi=%d, size=%d, ntot=%lld\n",irap,iphi,int(partmap[irap][iphi].size()),ntot);
 			for(ita=partmap[irap][iphi].begin();ita!=partmap[irap][iphi].end();++ita){
 				partaa=ita->second;
+				ntotprime+=1;
 				if(partaa->ID==IDA || partaa->ID==IDB){
 					itb=ita; itb++;
 					partbb=itb->second;

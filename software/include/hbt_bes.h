@@ -47,9 +47,10 @@ public:
 	double RANSEED;
 
 	// Part List
-	vector<CHBT_Part *> parta;
-	vector<CHBT_Part *> partb;
+	//vector<CHBT_Part *> parta;
+	//vector<CHBT_Part *> partb;
 	vector<vector <CHBT_PartMap>> partmap;
+	vector<vector<vector<int>>> Na,Nb;
 	
 	CHBT_BES(string parsfilename);
 	void ReadPR();
@@ -57,7 +58,6 @@ public:
 	void AddPart(int &IDread,vector<double> &pread,vector<double> &xread,double mass);
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
-	void CalcCF_MC();
 	void CalcCF_Gauss(double Rout,double Rside, double Rlong);
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
@@ -82,11 +82,18 @@ public:
 	static double Rcoalescence;
 	static CRandy *randy;
 	static CHBT_BES *hbt;
-	long long int nincrement,ncoalescence;
+	static bool COAL_USE_WF;
+	static double COAL_DELR;
+	static vector<double> psi_coal;
+	void CalcCoalWF();
+	double D3q;  // Used for weighting and coalescence
+	long long int nincrement;
+	double ncoalescence;
+	double CoalescenceWeight(double r);
 	CWaveFunction *wf;
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
 	vector<double> source_out,source_side,source_long;
-	vector<long long int> norm_qinv,norm_qout,norm_qside,norm_qlong;
+	vector<double> norm_qinv,norm_qout,norm_qside,norm_qlong;
 	vector<vector<double>> ThetaPhiDist;
 	CF();
 	void CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r);
