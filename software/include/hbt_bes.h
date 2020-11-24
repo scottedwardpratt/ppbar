@@ -54,6 +54,7 @@ public:
 	
 	CHBT_BES(string parsfilename);
 	void ReadPR();
+	void ReadCFs();
 	double Getqinv(vector<double> &pa,vector<double> &pb);
 	void AddPart(int &IDread,vector<double> &pread,vector<double> &xread,double mass);
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
@@ -101,6 +102,7 @@ public:
 	void Normalize();
 	void Print();
 	void WriteCFs(string filename);
+	void ReadCF(string filename);
 	void WriteThetaPhiDist(string filename);
 	void PrintSourceProjections();
 	void Increment(CHBT_Part *parta,CHBT_Part *partb);

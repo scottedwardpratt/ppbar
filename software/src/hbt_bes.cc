@@ -88,6 +88,10 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		MASSA=MASSB=938.272;
 		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
 	}
+	else if((IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212) || (IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212)){
+		MASSA=MASSB=939.0;
+		wf=new CWaveFunction_pn_phaseshift(parsfilename);
+	}
 	else{
 		printf("fatal: IDs not recognized, IDA=%d, IDB=%d\n",IDA,IDB);
 		exit(1);
@@ -110,8 +114,8 @@ CHBT_BES::CHBT_BES(string parsfilename){
 					CFArray[irap][iphi][iuperp]->wf=wf;
 					uperp=(iuperp+0.5)*DELUPERP;
 					mu=MASSA*MASSB/(MASSA+MASSB);
-					D3q=2.0*mu*DELRAP;
-					D3q*=2.0*mu*uperp*DELPHI;
+					D3q=mu*DELRAP;
+					D3q*=mu*uperp*DELPHI;
 					D3q*=2.0*mu*UPERPTEST;
 					CFArray[irap][iphi][iuperp]->D3q=D3q;
 				}
@@ -343,8 +347,8 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 	for(iuperp=0;iuperp<NUPERP;iuperp++){
 		uperp0=iuperp*DELUPERP;
 		uperp1=(iuperp+1)*DELUPERP;
-		D3PoverEa=DELRAP*NRAP*2.0*PI*MASSA*MASSA*PI*(uperp1*uperp1-uperp0*uperp0);
-		D3PoverEb=DELRAP*NRAP*2.0*PI*MASSB*MASSB*PI*(uperp1*uperp1-uperp0*uperp0);
+		D3PoverEa=DELRAP*NRAP*MASSA*MASSA*PI*(uperp1*uperp1-uperp0*uperp0);
+		D3PoverEb=DELRAP*NRAP*MASSB*MASSB*PI*(uperp1*uperp1-uperp0*uperp0);
 		aspectra[iuperp]=aspectra[iuperp]/(NEVENTS*D3PoverEa);
 		bspectra[iuperp]=bspectra[iuperp]/(NEVENTS*D3PoverEb);
 		Rhbt[iuperp]=cfactor*aspectra[iuperp]*aspectra[iuperp]/coalspectra[iuperp];

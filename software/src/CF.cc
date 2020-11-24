@@ -102,18 +102,18 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 				norm_qinv[iq]+=1.0/D3q;
 				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
-					if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
-						cf_qout[iq]+=psisquared;
-						norm_qout[iq]+=1;
-					}
-					if(fabs(qy)>OUTSIDELONG_DIRECTION_CUT){
-						cf_qside[iq]+=psisquared;
-						norm_qside[iq]+=1;
-					}
-					if(fabs(qz)>OUTSIDELONG_DIRECTION_CUT){
-						cf_qlong[iq]+=psisquared;
-						norm_qlong[iq]+=1;
-					}
+				if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
+				cf_qout[iq]+=psisquared;
+				norm_qout[iq]+=1;
+				}
+				if(fabs(qy)>OUTSIDELONG_DIRECTION_CUT){
+				cf_qside[iq]+=psisquared;
+				norm_qside[iq]+=1;
+				}
+				if(fabs(qz)>OUTSIDELONG_DIRECTION_CUT){
+				cf_qlong[iq]+=psisquared;
+				norm_qlong[iq]+=1;
+				}
 				}*/
 				if(USE_OUTSIDELONG_Q_CUT){
 					double qperp;
@@ -294,7 +294,7 @@ void CF::Print(){
 	int ixyz;
 	printf("# xyz     source_out     source_side   source_long\n");
 	for(ixyz=0;ixyz<Nxyz;ixyz++){
-		printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz],source_side[ixyz],source_long[ixyz]);
+	printf("%5.2f %10.4e %10.4e %10.4e\n",(ixyz+0.5)*Dxyz,source_out[ixyz],source_side[ixyz],source_long[ixyz]);
 	}
 	*/
 }
@@ -357,14 +357,14 @@ double CF::CoalescenceWeight(double r){
 
 void CF::CalcCoalWF(){
 	COAL_DELR=0.05;
-	double root4pi=sqrt(4.0*PI);
 	const int nr=1000;
+	double root4pi=sqrt(4.0*PI);
 	int ir,ntries=0;
 	psi_coal.resize(nr);
 	double A,C;   // prefactors
 	double B=2.24;   // binding energy
 	double mu=0.5*939.0;  // reduced mass
-	double a=1.0;    // well width
+	double a=1.4;    // well width
 	double k,q;  // wave number inside/outside well
 	double f,dfdk,dk,norm,r;
 	q=sqrt(2.0*mu*B)/HBARC;
@@ -384,11 +384,11 @@ void CF::CalcCoalWF(){
 		printf("Coalescence WF calculation failed to converge, will exit\n");
 		exit(1);
 	}
-	A=1.0/(sqrt(a)*sin(k*a));
-	norm=A*A*((0.5/a)-(0.25/k)*sin(2.0*k*a));
+	A=1.0/(sin(k*a));
+	norm=A*A*((0.5*a)-(0.25/k)*sin(2.0*k*a));
 	norm+=0.5/q;
 	A=A/sqrt(norm);
-	C=1.0/sqrt(a*norm);
+	C=1.0/sqrt(norm);
 	for(ir=0;ir<nr;ir++){
 		r=(ir+0.5)*COAL_DELR;
 		if(r<a)
@@ -397,14 +397,27 @@ void CF::CalcCoalWF(){
 			psi_coal[ir]=C*exp(-q*(r-a));
 		psi_coal[ir]=psi_coal[ir]/(root4pi*r);
 	}
-	double normcheck=0.0;
+	double normcheck=0.0,r2bar=0.0;
 	for(ir=0;ir<nr;ir++){
 		r=(0.5+ir)*COAL_DELR;
+		r2bar+=COAL_DELR*4.0*PI*r*r*psi_coal[ir]*psi_coal[ir]*r*r;
 		normcheck+=COAL_DELR*4.0*PI*r*r*psi_coal[ir]*psi_coal[ir];
 	}
 	if(fabs(normcheck-1.0)>1.0E-5){
 		printf("normcheck=%g\n",normcheck);
 		exit(1);
+	}
+}
+
+void CF::ReadCF(string filename){
+	char dummy[120];
+	FILE *fptr=fopen(filename.c_str(),"r");
+	fgets(dummy,120,fptr);
+	fgets(dummy,120,fptr);
+	int iq;
+	double qinv;
+	for(iq=0;iq<NQ;iq++){
+		fscanf(fptr,"%lf %lf %lf %lf %lf",&qinv,&cf_qinv[iq],&cf_qout[iq],&cf_qside[iq],&cf_qlong[iq]);
 	}
 }
 

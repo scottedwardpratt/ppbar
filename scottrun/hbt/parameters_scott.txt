@@ -1,13 +1,13 @@
 IDA 2212
-IDB 2212
-IDENTICAL true
+IDB 2112
+IDENTICAL false
 DELQ 2.0
 NQMAX 50
 NPHI 18
 NRAP 6
 DELRAP 0.2
-NUPERP 80      # no. of steps in Pt or uperp for binning CFs #
-DELPT 50.0.    # total transverse momentum steps for binning
+NUPERP 80     # no. of steps in Pt or uperp for binning CFs #
+DELPT 50.0    # total transverse momentum steps for binning
 UPERPTEST 0.01       #for determining if momenta are sufficiently close for HBT calc
 NSAMPLE_THETAPHI 4
 TAU_COMPARE 12.0
@@ -19,7 +19,7 @@ OUTSIDELONG_Q_CUT 10.0
 OSCAR_NRUNS 48
 QARRAYFILENAME crap.txt
 RESULTS_DIR results_scott
-NEVENTS_MAX 9600
+NEVENTS_MAX 960
 NMC 100000
 RCOALESCENCE 2.0
 RANSEED -12345
