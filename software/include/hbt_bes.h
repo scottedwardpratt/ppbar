@@ -67,6 +67,7 @@ public:
 	void GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp);
 	vector<vector<vector<CF *>>> CFArray;
 	void WriteThetaPhiDists();
+	double GetChiSquare(CF *cfa,CF *cfb);
 	CF *cfbar;
 	CF *cfgauss;
 };

@@ -1,5 +1,6 @@
-#ifndef __HBT_BES_WRITESTUFF_CC__
-#define __HBT_BES_WRITESTUFF_CC__
+#ifndef __HBT_BES_READWRITESTUFF_CC__
+#define __HBT_BES_READWRITESTUFF_CC__
+#include <cstdlib>
 #include "commondefs.h"
 #include "coral.h"
 #include "hbt_bes.h"
@@ -61,6 +62,9 @@ void CHBT_BES::ReadPR(){
 void CHBT_BES::WriteCFs(){
 	char filename[150];
 	int irap,iphi,iuperp;
+	char command[120];
+	sprintf(command,"mkdir -p %s/CFs",RESULTS_DIR.c_str());
+	system(command);
 	for(irap=0;irap<NRAP;irap++){
 		for(iphi=0;iphi<NPHI;iphi++){
 			for(iuperp=0;iuperp<NUPERP;iuperp++){

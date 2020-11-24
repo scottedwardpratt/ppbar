@@ -8,14 +8,21 @@ int main(int argc,char *argv[]){
 		exit(1);			
 	}
 	double Rout,Rside,Rlong;
-	
 	CHBT_BES hbt(argv[1]);
+	hbt.randy->reset(-time(NULL));
+	CF cf_smash;
+	string filename;
+	
+	filename=hbt.RESULTS_DIR+"/CFs/average.txt";
+	cf_smash.ReadCF(filename);
+
 	printf("Enter Rout,Rside,Rlong: ");
 	scanf("%lf %lf %lf",&Rout,&Rside,&Rlong);
-	hbt.randy->reset(-time(NULL));
+	hbt.RESULTS_DIR="results_gauss";
 	hbt.CalcCF_Gauss(Rout,Rside,Rlong);
-	//hbt.WriteCFs();
-	//hbt.WriteThetaPhiDists();
+	
+	double chisquare=hbt.GetChiSquare(hbt.cfgauss,&cf_smash);
+	printf("chisquare=%g\n",chisquare);
 	hbt.cfgauss->Print();
 	return 0;
 }
