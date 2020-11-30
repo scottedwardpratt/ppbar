@@ -63,7 +63,7 @@ public:
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
-	void CalcCoalescenceSpectra();
+	void CalcWriteSpectra();
 	void GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp);
 	vector<vector<vector<CF *>>> CFArray;
 	void WriteThetaPhiDists();

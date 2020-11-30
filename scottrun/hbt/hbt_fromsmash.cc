@@ -16,6 +16,6 @@ int main(int argc,char *argv[]){
 	hbt.WriteCFs();
 	//hbt.WriteThetaPhiDists();
 	hbt.cfbar->Print();
-	hbt.CalcCoalescenceSpectra();
+	hbt.CalcWriteSpectra();
 	return 0;
 }

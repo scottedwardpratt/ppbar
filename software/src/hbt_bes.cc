@@ -42,7 +42,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	NTRY=0;
 	TAU_COMPARE=25.0;
 	INPUT_OSCAR_BASE_DIRECTORY=GITHOME_MSU+"/"+parmap->getS("INPUT_OSCAR_BASE_DIRECTORY","crap");
-	INPUT_OSCAR_NRUNS=parmap->getI("OSCAR_NRUNS",24);
+	INPUT_OSCAR_NRUNS=parmap->getI("OSCAR_NRUNS",48);
 	//RANSEED=parmap->getD("RANSEED",-12345);
 	RANSEED=-time(NULL);
 	UPERPTEST=parmap->getD("UPERPTEST",0.02);
@@ -230,34 +230,41 @@ void CHBT_BES::GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,in
 }
 
 void CHBT_BES::AverageCF(){
+	double ptmin_averaging,ptmax_averaging;
+	ptmin_averaging=parmap->getD("CF_AVERAGING_PTMIN",0.0);
+	ptmax_averaging=parmap->getD("CF_AVERAGING_PTMAX",3000.0);
+	double pt;
 	CF *cfptr;
 	int iq;
 	cfbar->Reset();
 	for(int irap=0;irap<NRAP;irap++){
 		for(int iphi=0;iphi<NPHI;iphi++){
 			for(int iuperp=0;iuperp<NUPERP;iuperp++){
-				cfptr=CFArray[irap][iphi][iuperp];
-				cfbar->nincrement+=cfptr->nincrement;
-				if(cfptr->norm_qinv[0]>1.0E-20){
-					for(iq=0;iq<CF::NQ;iq++){
-						cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
-						cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
-						cfbar->norm_qside[iq]+=cfptr->norm_qside[iq];
-						cfbar->norm_qlong[iq]+=cfptr->norm_qlong[iq];
-						cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
-						cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
-						cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
-						cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
+				pt=(iuperp+0.5)*DELPT;
+				if(pt>=ptmin_averaging && pt<=ptmax_averaging){
+					cfptr=CFArray[irap][iphi][iuperp];
+					cfbar->nincrement+=cfptr->nincrement;
+					if(cfptr->norm_qinv[0]>1.0E-20){
+						for(iq=0;iq<CF::NQ;iq++){
+							cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
+							cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
+							cfbar->norm_qside[iq]+=cfptr->norm_qside[iq];
+							cfbar->norm_qlong[iq]+=cfptr->norm_qlong[iq];
+							cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+							cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
+							cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
+							cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
 						
-						if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
-							printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
-							CFArray[irap][iphi][iuperp]->Print();
-							exit(1);
+							if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
+								printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
+								CFArray[irap][iphi][iuperp]->Print();
+								exit(1);
+							}
 						}
-					}
-					for(int ictheta=0;ictheta<10;ictheta++){
-						for(int iphir=0;iphir<18;iphir++){
-							cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->nincrement;
+						for(int ictheta=0;ictheta<10;ictheta++){
+							for(int iphir=0;iphir<18;iphir++){
+								cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->nincrement;
+							}
 						}
 					}
 				}
@@ -285,78 +292,6 @@ void CHBT_BES::AverageCF(){
 		cfbar->source_out[ixyz]+=cfptr->source_out[ixyz]/double(cfbar->nincrement);
 		cfbar->source_side[ixyz]+=cfptr->source_side[ixyz]/double(cfbar->nincrement);
 		cfbar->source_long[ixyz]+=cfptr->source_long[ixyz]/double(cfbar->nincrement);
-	}
-}
-
-void CHBT_BES::CalcCoalescenceSpectra(){
-	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
-	double Pt,uperp,D3PoverE,D3PoverEa,D3PoverEb,E,phi,delN,uperp1,uperp0,mu=MASSA*MASSB/(MASSA+MASSB);;
-	double Ebar=0.0,Ptbar=0.0,EtPtnorm=0.0,V2=0.0;
-	int iuperp,irap,iphi;
-	CF *cfptr;
-	double cfactor;
-	//D3r=4.0*PI*pow(CF::Rcoalescence,3)/3.0; // Coalescence volume in coordinate space
-	vector<double> coalspectra,aspectra,bspectra,Rhbt,B2;
-	coalspectra.resize(NUPERP);
-	aspectra.resize(NUPERP);
-	bspectra.resize(NUPERP);
-	Rhbt.resize(NUPERP);
-	B2.resize(NUPERP);
-	for(iuperp=0;iuperp<NUPERP;iuperp++){
-		coalspectra[iuperp]=aspectra[iuperp]=bspectra[iuperp]=0.0;
-	}
-	
-	long long int ntot=0;
-	double ncoalraw=0,ncoal=0.0;
-	cfactor=COAL_SPIN_FACTOR*pow(2.0*PI*HBARC,3)/(double(NEVENTS)*double(NEVENTS));
-	for(irap=0;irap<NRAP;irap++){
-		for(iphi=0;iphi<NPHI;iphi++){
-			phi=DELPHI*(iphi+0.5);
-			ntot+=partmap[irap][iphi].size();
-			for(iuperp=0;iuperp<NUPERP;iuperp++){
-				cfptr=CFArray[irap][iphi][iuperp];
-				uperp=(iuperp+0.5)*DELUPERP;
-				Pt=(MASSA+MASSB)*uperp;
-				E=sqrt(Pt*Pt+(MASSA+MASSB)*(MASSA+MASSB));
-				delN=cfactor*cfptr->ncoalescence;
-				ncoal+=delN;
-				ncoalraw+=cfptr->ncoalescence;
-				if(IDA==IDB)
-					coalspectra[iuperp]+=2.0*delN;
-				else
-					coalspectra[iuperp]+=delN;
-				EtPtnorm+=delN;
-				Ebar+=E*delN;
-				Ptbar+=Pt*delN;
-				V2+=cos(2.0*phi)*delN;
-				aspectra[iuperp]+=Na[irap][iphi][iuperp];
-				bspectra[iuperp]+=Nb[irap][iphi][iuperp];
-			}
-		}
-	}
-	printf("ncoal=%g, ncoalraw=%g\n",ncoal,ncoalraw);
-	for(iuperp=0;iuperp<NUPERP;iuperp++){
-		Pt=(iuperp+0.5)*DELPT;
-		D3PoverE=2.0*PI*NRAP*DELRAP*Pt*DELPT;
-		coalspectra[iuperp]=coalspectra[iuperp]/D3PoverE;
-		printf("%6.2f %g\n",Pt,coalspectra[iuperp]*1.0E6);
-	}
-	printf("For coalescence, <Et>=%g, <Pt>=%g, V2=%g\n",Ebar/EtPtnorm,Ptbar/EtPtnorm,V2/EtPtnorm);
-	printf("ntot=%lld\n",ntot);
-	mu=MASSA*MASSB/(MASSA+MASSB);
-	cfactor=pow(PI*HBARC*HBARC,1.5)*COAL_SPIN_FACTOR/mu;
-	for(iuperp=0;iuperp<NUPERP;iuperp++){
-		uperp0=iuperp*DELUPERP;
-		uperp1=(iuperp+1)*DELUPERP;
-		D3PoverEa=DELRAP*NRAP*MASSA*MASSA*PI*(uperp1*uperp1-uperp0*uperp0);
-		D3PoverEb=DELRAP*NRAP*MASSB*MASSB*PI*(uperp1*uperp1-uperp0*uperp0);
-		aspectra[iuperp]=aspectra[iuperp]/(NEVENTS*D3PoverEa);
-		bspectra[iuperp]=bspectra[iuperp]/(NEVENTS*D3PoverEb);
-		Rhbt[iuperp]=cfactor*aspectra[iuperp]*aspectra[iuperp]/coalspectra[iuperp];
-		B2[iuperp]=coalspectra[iuperp]/(aspectra[iuperp]*bspectra[iuperp]);
-		Rhbt[iuperp]=pow(Rhbt[iuperp],1.0/3.0);
-		Pt=(MASSA+MASSB)*(iuperp+0.5)*DELUPERP;
-		printf("%7.1f %7.4f %8.5f\n",Pt,Rhbt[iuperp],B2[iuperp]);
 	}
 }
 

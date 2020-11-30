@@ -5,7 +5,7 @@
 #include "coral.h"
 #include "hbt_bes.h"
 
-void CHBT_BES::CalcCoalescenceSpectra(){
+void CHBT_BES::CalcWriteSpectra(){
 	double COAL_SPIN_FACTOR=parmap->getD("COAL_SPIN_FACTOR",0.75);
 	double Pt,uperp,D3PoverE,D3PoverEa,D3PoverEb,E,phi,delN,uperp1,uperp0,mu=MASSA*MASSB/(MASSA+MASSB);;
 	double Ebar=0.0,Ptbar=0.0,EtPtnorm=0.0,V2=0.0;
@@ -62,6 +62,16 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 	printf("ntot=%lld\n",ntot);
 	mu=MASSA*MASSB/(MASSA+MASSB);
 	cfactor=pow(PI*HBARC*HBARC,1.5)*COAL_SPIN_FACTOR/mu;
+	char command[150],filename[150];
+	sprintf(command,"mkdir -p %s/spectra",RESULTS_DIR.c_str());
+	system(command);
+	sprintf(filename,"%s/spectra/spectra_%d.txt",RESULTS_DIR.c_str(),IDA);
+	FILE *fptra=fopen(filename,"w");
+	sprintf(filename,"%s/spectra/spectra_%d.txt",RESULTS_DIR.c_str(),IDB);
+	FILE *fptrb=fopen(filename,"w");
+	sprintf(filename,"%s/spectra/spectra_coalescence.txt",RESULTS_DIR.c_str());
+	FILE *fptrc=fopen(filename,"w");
+	fprintf(fptrc," Pt     Rhbt        B2        spectra\n");
 	for(iuperp=0;iuperp<NUPERP;iuperp++){
 		uperp0=iuperp*DELUPERP;
 		uperp1=(iuperp+1)*DELUPERP;
@@ -69,12 +79,20 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 		D3PoverEb=DELRAP*NRAP*MASSB*MASSB*PI*(uperp1*uperp1-uperp0*uperp0);
 		aspectra[iuperp]=aspectra[iuperp]/(NEVENTS*D3PoverEa);
 		bspectra[iuperp]=bspectra[iuperp]/(NEVENTS*D3PoverEb);
-		Rhbt[iuperp]=cfactor*aspectra[iuperp]*aspectra[iuperp]/coalspectra[iuperp];
+		Rhbt[iuperp]=cfactor*aspectra[iuperp]*bspectra[iuperp]/coalspectra[iuperp];
 		B2[iuperp]=coalspectra[iuperp]/(aspectra[iuperp]*bspectra[iuperp]);
 		Rhbt[iuperp]=pow(Rhbt[iuperp],1.0/3.0);
+		Pt=MASSA*(iuperp+0.5)*DELUPERP;
+		fprintf(fptra,"%7.1f %15.7e\n",Pt,aspectra[iuperp]*1.0E6);
+		Pt=MASSB*(iuperp+0.5)*DELUPERP;
+		fprintf(fptrb,"%7.1f %15.7e\n",Pt,bspectra[iuperp]*1.0E6);
 		Pt=(MASSA+MASSB)*(iuperp+0.5)*DELUPERP;
-		printf("%7.1f %7.4f %8.5f\n",Pt,Rhbt[iuperp],B2[iuperp]);
+		printf("%7.1f %7.4f %15.7e %15.7e\n",Pt,Rhbt[iuperp],B2[iuperp]/1.0E6,coalspectra[iuperp]*1.0E6);
+		fprintf(fptrc,"%7.1f %7.4f %15.7e %15.7e\n",Pt,Rhbt[iuperp],B2[iuperp]/1.0E6,coalspectra[iuperp]*1.0E6);
 	}
+	fclose(fptra);
+	fclose(fptrb);
+	fclose(fptrc);
 }
 
 #endif

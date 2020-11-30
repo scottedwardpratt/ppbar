@@ -69,7 +69,7 @@ void CHBT_BES::WriteCFs(){
 		for(iphi=0;iphi<NPHI;iphi++){
 			for(iuperp=0;iuperp<NUPERP;iuperp++){
 				sprintf(filename,"%s/CFs/rap%g_phi%g_Pt%g.txt",RESULTS_DIR.c_str(),
-				-0.5*NRAP*DELRAP+(irap+0.5)*DELRAP,-0.5*NPHI*DELPHI+(iphi+0.5)*DELPHI*180.0/PI,(iuperp+0.5)*DELPT);
+				-0.5*NRAP*DELRAP+(irap+0.5)*DELRAP,-0.5*NPHI*DELPHI*180.0/PI+(iphi+0.5)*DELPHI*180.0/PI,(iuperp+0.5)*DELPT);
 				CFArray[irap][iphi][iuperp]->WriteCFs(string(filename));
 			}
 		}
