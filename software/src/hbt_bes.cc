@@ -296,11 +296,12 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 	CF *cfptr;
 	double cfactor;
 	//D3r=4.0*PI*pow(CF::Rcoalescence,3)/3.0; // Coalescence volume in coordinate space
-	vector<double> coalspectra,aspectra,bspectra,Rhbt;
+	vector<double> coalspectra,aspectra,bspectra,Rhbt,B2;
 	coalspectra.resize(NUPERP);
 	aspectra.resize(NUPERP);
 	bspectra.resize(NUPERP);
 	Rhbt.resize(NUPERP);
+	B2.resize(NUPERP);
 	for(iuperp=0;iuperp<NUPERP;iuperp++){
 		coalspectra[iuperp]=aspectra[iuperp]=bspectra[iuperp]=0.0;
 	}
@@ -352,9 +353,10 @@ void CHBT_BES::CalcCoalescenceSpectra(){
 		aspectra[iuperp]=aspectra[iuperp]/(NEVENTS*D3PoverEa);
 		bspectra[iuperp]=bspectra[iuperp]/(NEVENTS*D3PoverEb);
 		Rhbt[iuperp]=cfactor*aspectra[iuperp]*aspectra[iuperp]/coalspectra[iuperp];
+		B2[iuperp]=coalspectra[iuperp]/(aspectra[iuperp]*bspectra[iuperp]);
 		Rhbt[iuperp]=pow(Rhbt[iuperp],1.0/3.0);
 		Pt=(MASSA+MASSB)*(iuperp+0.5)*DELUPERP;
-		printf("%7.1f %7.4f\n",Pt,Rhbt[iuperp]);
+		printf("%7.1f %7.4f %8.5f\n",Pt,Rhbt[iuperp],B2[iuperp]);
 	}
 }
 
