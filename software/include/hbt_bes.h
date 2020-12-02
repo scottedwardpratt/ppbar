@@ -27,7 +27,7 @@ public:
 	CparameterMap *parmap;
 	CWaveFunction *wf;
 	CRandy *randy;
-	bool GAUSS;  // if true don't init stuff for reading in OSCAR output
+	bool GAUSSONLY;  // if true don't init stuff for reading in OSCAR output
 	
 	string INPUT_OSCAR_FILENAME;
 	string INPUT_OSCAR_BASE_DIRECTORY;
@@ -63,10 +63,10 @@ public:
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
+	void AverageCF(CF *cf,double ymin,double ymax,double ptmin,double ptmax,double phimin_deg,double phimax_deg);
 	void CalcWriteSpectra();
 	void GetIrapIphiIuperp(double rap,double phi,double uperp,int &irap,int &iphi,int &iuperp);
 	vector<vector<vector<CF *>>> CFArray;
-	void WriteThetaPhiDists();
 	double GetChiSquare(CF *cfa,CF *cfb);
 	CF *cfbar;
 	CF *cfgauss;
@@ -74,6 +74,7 @@ public:
 
 class CF{
 public:
+	CF();
 	static int NQ,Nxyz,NSAMPLE_THETAPHI;
 	static double DELQ;
 	static double OUTSIDELONG_DIRECTION_CUT;  // cos(theta) must be > this value, theta is angle of q rel to axis
@@ -96,15 +97,12 @@ public:
 	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
 	vector<double> source_out,source_side,source_long;
 	vector<double> norm_qinv,norm_qout,norm_qside,norm_qlong;
-	vector<vector<double>> ThetaPhiDist;
-	CF();
 	void CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r);
 	void Reset();
 	void Normalize();
 	void Print();
 	void WriteCFs(string filename);
-	void ReadCF(string filename);
-	void WriteThetaPhiDist(string filename);
+	void ReadCFs(string filename);
 	void PrintSourceProjections();
 	void Increment(CHBT_Part *parta,CHBT_Part *partb);
 	void Increment(vector<double> &x);

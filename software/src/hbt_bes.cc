@@ -13,7 +13,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	parmap=new CparameterMap();
 	parmap->ReadParsFromFile(parsfilename);
 	TAU_COMPARE=parmap->getD("TAU_COMPARE",12.0);
-	GAUSS=parmap->getB("GAUSS",false);
+	GAUSSONLY=parmap->getB("GAUSSONLY",false);
 	CF::NQ=parmap->getI("NQMAX",100);
 	CF::DELQ=parmap->getD("DELQ",2.0);
 	CF::OUTSIDELONG_DIRECTION_CUT=parmap->getD("OUTSIDELONG_DIRECTION_CUT",0.9);
@@ -102,7 +102,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	}
 	DELUPERP=DELPT/(MASSA+MASSB);
 	
-	if(!GAUSS){
+	if(!GAUSSONLY){
 		CFArray.resize(NRAP);
 		for(irap=0;irap<NRAP;irap++){
 			CFArray[irap].resize(NPHI);
@@ -127,13 +127,11 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		if(CF::COAL_USE_WF)
 			cfbar->CalcCoalWF();
 	}
-	else{
-		cfgauss=new CF();
-		cfgauss->nincrement=0;
-		cfgauss->Reset();
-		cfgauss->wf=wf;
-		cfgauss->D3q=1.0;
-	}
+	cfgauss=new CF();
+	cfgauss->nincrement=0;
+	cfgauss->Reset();
+	cfgauss->wf=wf;
+	cfgauss->D3q=1.0;
 }
 
 void CHBT_BES::AddPart(int &IDread,vector<double> &p,vector<double> &x,double mass){
@@ -244,34 +242,6 @@ void CHBT_BES::AverageCF(){
 				if(pt>=ptmin_averaging && pt<=ptmax_averaging){
 					cfptr=CFArray[irap][iphi][iuperp];
 					cfbar->nincrement+=cfptr->nincrement;
-					if(cfptr->norm_qinv[0]>1.0E-20){
-						for(iq=0;iq<CF::NQ;iq++){
-							cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
-							cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
-							cfbar->norm_qside[iq]+=cfptr->norm_qside[iq];
-							cfbar->norm_qlong[iq]+=cfptr->norm_qlong[iq];
-							cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
-							cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
-							cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
-							cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
-						
-							if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
-								printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
-								CFArray[irap][iphi][iuperp]->Print();
-								exit(1);
-							}
-						}
-						for(int ictheta=0;ictheta<10;ictheta++){
-							for(int iphir=0;iphir<18;iphir++){
-								cfbar->ThetaPhiDist[ictheta][iphir]+=cfptr->ThetaPhiDist[ictheta][iphir]*cfptr->nincrement;
-							}
-						}
-					}
-				}
-				for(int ixyz=0;ixyz<CF::Nxyz;ixyz++){
-					cfbar->source_out[ixyz]+=cfptr->source_out[ixyz];
-					cfbar->source_side[ixyz]+=cfptr->source_side[ixyz];
-					cfbar->source_long[ixyz]+=cfptr->source_long[ixyz];
 				}
 			}
 		}
@@ -283,16 +253,56 @@ void CHBT_BES::AverageCF(){
 		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/cfbar->norm_qlong[iq];
 	}
 	printf("nincrement_sum=%lld, cfbar->norm_qinv[0]=%g\n",cfbar->nincrement,cfbar->norm_qinv[0]);
-	for(int ictheta=0;ictheta<10;ictheta++){
-		for(int iphir=0;iphir<18;iphir++){
-			cfbar->ThetaPhiDist[ictheta][iphir]=cfbar->ThetaPhiDist[ictheta][iphir]/double(cfbar->nincrement);
+}
+
+void CHBT_BES::AverageCF(CF *cf,double rapmin,double rapmax,double ptmin,double ptmax,double phimin_deg,double phimax_deg){
+	double pt,phi_deg,rap,delphi_deg=DELPHI*180.0/PI;
+	CF *cfptr;
+	int iq;
+	cf->Reset();
+	for(int irap=0;irap<NRAP;irap++){
+		rap=-0.5*NRAP*DELRAP+(irap+0.5)*DELRAP;
+		if(rap>rapmin && rap<rapmax){
+			for(int iphi=0;iphi<NPHI;iphi++){
+				phi_deg=-180.0+(iphi+0.5)*delphi_deg;
+				printf("phi_deg=%g\n",phi_deg);
+				if(phi_deg>phimin_deg && phi_deg<phimax_deg){
+					for(int iuperp=0;iuperp<NUPERP;iuperp++){
+						pt=(iuperp+0.5)*DELPT;
+						if(pt>=ptmin && pt<=ptmax){
+							cfptr=CFArray[irap][iphi][iuperp];
+							cf->nincrement+=cfptr->nincrement;
+							if(cfptr->norm_qinv[0]>1.0E-20){
+								for(iq=0;iq<CF::NQ;iq++){
+									cf->norm_qinv[iq]+=cfptr->norm_qinv[iq];
+									cf->norm_qout[iq]+=cfptr->norm_qout[iq];
+									cf->norm_qside[iq]+=cfptr->norm_qside[iq];
+									cf->norm_qlong[iq]+=cfptr->norm_qlong[iq];
+									cf->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+									cf->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
+									cf->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
+									cf->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
+						
+									if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
+										printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
+										cfptr->Print();
+										exit(1);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
-	for(int ixyz=0;ixyz<CF::Nxyz;ixyz++){
-		cfbar->source_out[ixyz]+=cfptr->source_out[ixyz]/double(cfbar->nincrement);
-		cfbar->source_side[ixyz]+=cfptr->source_side[ixyz]/double(cfbar->nincrement);
-		cfbar->source_long[ixyz]+=cfptr->source_long[ixyz]/double(cfbar->nincrement);
+	for(iq=0;iq<CF::NQ;iq++){
+		cf->cf_qinv[iq]=cf->cf_qinv[iq]/cf->norm_qinv[iq];
+		cf->cf_qout[iq]=cf->cf_qout[iq]/cf->norm_qout[iq];
+		cf->cf_qside[iq]=cf->cf_qside[iq]/cf->norm_qside[iq];
+		cf->cf_qlong[iq]=cf->cf_qlong[iq]/cf->norm_qlong[iq];
 	}
+	printf("nincrement_sum=%lld, cf->norm_qinv[0]=%g\n",cf->nincrement,cf->norm_qinv[0]);
 }
 
 #endif
