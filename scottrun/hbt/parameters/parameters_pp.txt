@@ -1,0 +1,28 @@
+IDA 2212
+IDB 2212
+IDENTICAL true
+DELQ 2.0
+EPSILON 1.0
+NQMAX 40
+NPHI 18
+NRAP 6
+DELRAP 0.2
+NUPERP 80     # no. of steps in Pt or uperp for binning CFs #
+DELPT 50.0    # total transverse momentum steps for binning
+UPERPTEST 0.01       #for determining if momenta are sufficiently close for HBT calc
+NSAMPLE_THETAPHI 4
+TAU_COMPARE 12.0
+INPUT_OSCAR_BASE_DIRECTORY ppbar/scottrun/runss/smash_output/AuAu19.6/
+OSCAR_NRUNS 48
+USE_OUTSIDELONG_DIRECTION_CUT false
+OUTSIDELONG_DIRECTION_CUT 0.9
+USE_OUTSIDELONG_Q_CUT true
+OUTSIDELONG_Q_CUT 10.0
+RESULTS_DIR results_pp
+NEVENTS_MAX 9600
+NMC 100000
+RCOALESCENCE 2.0
+RANSEED -12345
+COAL_SPIN_FACTOR 0.75
+COAL_USE_WF true
+GAUSSONLY false
