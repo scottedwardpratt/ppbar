@@ -25,7 +25,7 @@ fig = plt.figure(1)
 ax = fig.add_axes([0.125,0.125,0.84,0.84])
 
 #filename='../results_'+sys.argv[1]+'/CFs/'+sys.argv[2]+'.txt'
-filename= "../results_qcut/CFs/average.txt"
+filename= "../results_pp/CFs/average.txt"
 print('filename=',filename)
 
 mydata = np.loadtxt(filename,skiprows=2,unpack=True)

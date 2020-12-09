@@ -242,6 +242,27 @@ void CHBT_BES::AverageCF(){
 				if(pt>=ptmin_averaging && pt<=ptmax_averaging){
 					cfptr=CFArray[irap][iphi][iuperp];
 					cfbar->nincrement+=cfptr->nincrement;
+					if(pt>=ptmin_averaging && pt<=ptmax_averaging){
+						cfptr=CFArray[irap][iphi][iuperp];
+						cfbar->nincrement+=cfptr->nincrement;
+						if(cfptr->norm_qinv[0]>1.0E-20){
+							for(iq=0;iq<CF::NQ;iq++){
+								cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
+								cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
+								cfbar->norm_qside[iq]+=cfptr->norm_qside[iq];
+								cfbar->norm_qlong[iq]+=cfptr->norm_qlong[iq];
+								cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+								cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
+								cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
+								cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
+								if(cfptr->cf_qinv[iq] != cfptr->cf_qinv[iq]){
+									printf("irap=%d, iphi=%d, iuperp=%d\n",irap,iphi,iuperp);
+									cfptr->Print();
+									exit(1);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
