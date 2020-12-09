@@ -47,7 +47,7 @@ SET_SOURCE_FILES_PROPERTIES(
 
 add_executable(hbt_gausscompare ${SOURCE_FILES})
 add_dependencies(hbt_gausscompare extern_hbt_bes extern_coral extern_commonutils)
-target_link_libraries(hbt_gausscompare hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+target_link_libraries(hbt_gausscompare hbt_bes coral commonutils coral hbt_bes ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
 
 #################################################
 
@@ -61,4 +61,4 @@ SET_SOURCE_FILES_PROPERTIES(
 
 add_executable(hbt_gauss ${SOURCE_FILES})
 add_dependencies(hbt_gauss extern_hbt_bes extern_coral extern_commonutils)
-target_link_libraries(hbt_gauss hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+target_link_libraries(hbt_gauss hbt_bes commonutils coral ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
