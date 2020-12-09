@@ -55,11 +55,12 @@ void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong){
 	x.resize(4);
 	x[0]=0.0;
 	cfgauss->nincrement=0;
-#pragma omp parallel for
+	//#pragma omp parallel for
 	for(imc=0;imc<NMC;imc++){
 		x[1]=root2*Rout*randy->ran_gauss();
 		x[2]=root2*Rside*randy->ran_gauss();
 		x[3]=root2*Rlong*randy->ran_gauss();
+	//	printf("%g", x[1]);
 		cfgauss->Increment(x);
 		if((10*(imc+1))%NMC==0){
 			printf("finished %g percent\n",100.0*(imc+1)/double(NMC));
