@@ -62,9 +62,11 @@ void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong){
 		x[3]=root2*Rlong*randy->ran_gauss();
 	//	printf("%g", x[1]);
 		cfgauss->Increment(x);
+		/*
 		if((10*(imc+1))%NMC==0){
 			printf("finished %g percent\n",100.0*(imc+1)/double(NMC));
 		}
+		*/
 	}
 
 	

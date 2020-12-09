@@ -6,7 +6,7 @@ add_custom_target(extern_commonutils COMMAND make WORKING_DIRECTORY ${GITHOME_MS
 add_custom_target(extern_coral COMMAND make WORKING_DIRECTORY ${GITHOME_MSU}/coral/software)
 add_custom_target(extern_hbt_bes COMMAND make WORKING_DIRECTORY ${GITHOME_MSU}/ppbar/software)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -std=c++17 -fpie -fopenmp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wextra -Wmissing-declarations -Wpointer-arith -Wshadow -Wuninitialized -Winit-self -Wundef -Wcast-align -Wformat=2 -Wold-style-cast -Werror=switch -std=c++11 -mfpmath=sse")
 message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS})
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -62,3 +62,17 @@ SET_SOURCE_FILES_PROPERTIES(
 add_executable(hbt_gauss ${SOURCE_FILES})
 add_dependencies(hbt_gauss extern_hbt_bes extern_coral extern_commonutils)
 target_link_libraries(hbt_gauss hbt_bes commonutils coral ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+
+#################################################
+
+link_directories(${GITHOME_MSU}/ppbar/software/lib ${GITHOME_MSU}/commonutils/software/lib ${GITHOME_MSU}/coral/software/lib)
+message("Libraries: b3d_bes  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}" )
+
+set(SOURCE_FILES ./gausscompare_parallel.cc)
+SET_SOURCE_FILES_PROPERTIES(
+	gausscompare_parallel.cc PROPERTIES OBJECT_DEPENDS ${GITHOME_MSU}/ppbar/software/lib/libhbt_bes.a
+)
+
+add_executable(gausscompare_parallel ${SOURCE_FILES})
+add_dependencies(gausscompare_parallel extern_hbt_bes extern_coral extern_commonutils)
+target_link_libraries(gausscompare_parallel hbt_bes coral commonutils coral hbt_bes ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})

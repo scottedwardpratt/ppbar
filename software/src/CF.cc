@@ -6,7 +6,6 @@
 
 int CF::NQ=40;
 double CF::DELQ=2.0;
-CHBT_BES *CF::hbt=NULL;
 double CF::OUTSIDELONG_DIRECTION_CUT=0.9;
 double CF::OUTSIDELONG_Q_CUT=10.0;
 bool CF::USE_OUTSIDELONG_Q_CUT=true;
@@ -17,7 +16,6 @@ vector<double> CF::psi_coal={};
 int CF::Nxyz=100;
 double CF::Rcoalescence=1.5;
 double CF::COAL_DELR=0.05;
-CRandy* CF::randy=NULL;
 int CF::NSAMPLE_THETAPHI=4;
 
 CF::CF(){

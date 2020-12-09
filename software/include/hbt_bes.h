@@ -83,8 +83,8 @@ public:
 	static bool USE_OUTSIDELONG_DIRECTION_CUT;
 	static bool USE_OUTSIDELONG_Q_CUT;
 	static double Rcoalescence;
-	static CRandy *randy;
-	static CHBT_BES *hbt;
+	CRandy *randy;
+	CHBT_BES *hbt;
 	static bool COAL_USE_WF;
 	static double COAL_DELR;
 	static vector<double> psi_coal;

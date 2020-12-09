@@ -47,8 +47,6 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	RANSEED=-time(NULL);
 	UPERPTEST=parmap->getD("UPERPTEST",0.02);
 	randy=new CRandy(RANSEED);
-	CF::randy=randy;
-	CF::hbt=this;
 	Na.resize(NRAP);
 	Nb.resize(NRAP);
 	for(irap=0;irap<NRAP;irap++){
@@ -118,11 +116,15 @@ CHBT_BES::CHBT_BES(string parsfilename){
 					D3q*=mu*uperp*DELPHI;
 					D3q*=2.0*mu*UPERPTEST;
 					CFArray[irap][iphi][iuperp]->D3q=D3q;
+					CFArray[irap][iphi][iuperp]->hbt=this;
+					CFArray[irap][iphi][iuperp]->randy=randy;
 				}
 			}
 		}
 		cfbar=new CF();
 		cfbar->Reset();
+		cfbar->hbt=this;
+		cfbar->randy=randy;
 		cfbar->wf=wf;
 		if(CF::COAL_USE_WF)
 			cfbar->CalcCoalWF();
@@ -131,6 +133,8 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	cfgauss->nincrement=0;
 	cfgauss->Reset();
 	cfgauss->wf=wf;
+	cfgauss->hbt=this;
+	cfgauss->randy=randy;
 	cfgauss->D3q=1.0;
 }
 
