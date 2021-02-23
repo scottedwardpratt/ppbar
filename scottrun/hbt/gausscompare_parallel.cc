@@ -49,16 +49,21 @@ int main(int argc,char *argv[]){
 	double best[3]={3.5, 3.5, 5.0};
 	double diff=1.0,chisquare_best=5600000.0;
 	int location;
-	for(int k=0; k<10; ++k){
+	for(int k=0; k<100; ++k){
 		printf("k=%d, best R=(%g,%g,%g), diff=%g\n",k,best[0],best[1],best[2],diff);
 		
 		
 #pragma omp parallel for
 		for(int i=0; i<NTHREADS; ++i){
 			//my innovating
-			for(int j=0; j<3; j++){
-				//	best[j]=5.0;
-				arr[i][j]=best[j]+diff*(1.0-2.0*hbt_gauss[i]->randy->ran());
+			if(i==0){
+				for(int j=0; j<3; j++)
+					arr[i][j]=best[j];
+			}
+			else{
+				for(int j=0; j<3; j++){
+					arr[i][j]=best[j]+diff*(1.0-2.0*hbt_gauss[i]->randy->ran());
+				}
 			}
 			hbt_gauss[i]->cfgauss->Reset();
 			hbt_gauss[i]->CalcCF_Gauss(arr[i][0],arr[i][1],arr[i][2]);
@@ -67,9 +72,11 @@ int main(int argc,char *argv[]){
 		
 		location=-1;
 		bool success=false;
+		chisquare_best=100000000.0;
 		for(int i=0;i<NTHREADS;i++){
 			if(chisquare[i]<chisquare_best){
-				success=true;
+				if(i!=0)
+					success=true;
 				chisquare_best=chisquare[i];
 				location=i;
 				for(int j=0; j<3; j++){
@@ -86,7 +93,7 @@ int main(int argc,char *argv[]){
 			hbt_gauss[location]->cfgauss->Print();
 		}
 		if(!success)
-			diff*=0.5;
+			diff*=0.75;
 		//printf("finished thread %d\n",i);
 	}
 	printf("Target CF:\n");
