@@ -1,7 +1,5 @@
-//#ifndef __HBT_BES_CALC_CF_CC__
-#define __HBT_BES_CALC_CF_CC__
-#include "commondefs.h"
 #include "coral.h"
+#include "commondefs.h"
 #include "hbt_bes.h"
 
 int CF::NQ=40;
@@ -18,27 +16,33 @@ double CF::Rcoalescence=1.5;
 double CF::COAL_DELR=0.05;
 int CF::NSAMPLE_THETAPHI=4;
 
-int main(int argc, char *argv[]){
+int main(){
+	CRandy *randy=new CRandy(-1234);
 	double root2=sqrt(2.0);
-	double x[3]= {root2*3*randy->ran_gauss(),root2*4*randy->ran_gauss(),root2*5*randy->ran_gauss()};
-	int iq,ithetaphi;
-	double phi,ctheta,stheta,qx,qy,qz,qinv,qperp, cosgamma;
+	double x[3];
+	x[0]=root2*3*randy->ran_gauss();
+	x[1]=root2*4*randy->ran_gauss();
+	x[2]=root2*5*randy->ran_gauss();
+	int iq;
+	double phi,ctheta,stheta,qx,qy,qz;
 	double r,psisquared,psi,ctheta_qr;
-	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
+	string filename="parameters/parameters_pp.txt";
+	CWaveFunction *wf=new CWaveFunction_pp_schrod(filename);
+	r=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 	phi=2.0*PI*randy->ran();
 	ctheta=-1.0+2.0*randy->ran();
 	stheta=sqrt(1.0-ctheta*ctheta);
 	qz=ctheta;
 	qx=stheta*cos(phi);
 	qy=stheta*sin(phi);
-	ctheta_qr=(qx*x[1]+qy*x[2]+qz*x[3])/r;
+	ctheta_qr=(qx*x[0]+qy*x[1]+qz*x[2])/r;
 	
-	for(int iq=0; iq<1000; iq++){
+	for(iq=0; iq<1000; iq++){
 		psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
 		psi=wf->CalcPsiSquared(-iq,-r,ctheta_qr);
 		if(psisquared != psi){
 			printf("Psi error");
-			exit;
+			exit (1);
 		}
 	}
 	
