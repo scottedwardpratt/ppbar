@@ -30,11 +30,11 @@ int main(){
 	double phi,ctheta,stheta,qx,qy,qz,q;
 	double r,psisquared,psi,ctheta_qr;
 	string filename="parameters/parameters_pp.txt";
-	CWaveFunction *wf=new CWaveFunction_generic(filename, -1, MPROTON, MPROTON, 0.5);
+	CWaveFunction *wf=new CWaveFunction_generic(filename, -1, ProtonMass, ProtonMass, 0.5);
 	r=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 	
 	
-	for(iq=0; iq<NSAMPLE_THETAPHI; iq++){
+	for(iq=0; iq<CF::NSAMPLE_THETAPHI; iq++){
 		phi=2.0*PI*randy->ran();
 		ctheta=-1.0+2.0*randy->ran();
 		stheta=sqrt(1.0-ctheta*ctheta);
