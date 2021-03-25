@@ -46,7 +46,7 @@ int main(){
 		
 		psisquared=wf->GetPsiSquared(q,r,ctheta_qr);
 		psi=wf->GetPsiSquared(q,r,-ctheta_qr);
-		if(psisquared == psi){
+		if(psisquared != psi){
 			printf("Psi error");
 			exit (1);
 		}
