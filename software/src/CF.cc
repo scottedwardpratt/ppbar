@@ -16,9 +16,10 @@ vector<double> CF::psi_coal={};
 int CF::Nxyz=100;
 double CF::Rcoalescence=1.5;
 double CF::COAL_DELR=0.05;
-int CF::NSAMPLE_THETAPHI=4;
+int CF::NSAMPLE_THETAPHI=10;
 
 CF::CF(){
+	cf_1.resize(NQ);
 	cf_qinv.resize(NQ);
 	cf_qout.resize(NQ);
 	cf_qside.resize(NQ);
@@ -27,6 +28,7 @@ CF::CF(){
 	norm_qout.resize(NQ);
 	norm_qside.resize(NQ);
 	norm_qlong.resize(NQ);
+	norm_cf1.resize(NQ);
 	D3q=1.0;
 	Reset();
 }
@@ -34,14 +36,14 @@ CF::CF(){
 void CF::Reset(){
 	nincrement=ncoalescence=0;
 	for(int iq=0;iq<NQ;iq++){
-		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=0.0;
-		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=0.0;
+		cf_qinv[iq]=cf_qout[iq]=cf_qside[iq]=cf_qlong[iq]=cf_1[iq]=0.0;
+		norm_qinv[iq]=norm_qout[iq]=norm_qside[iq]=norm_qlong[iq]=norm_cf1[iq]=0.0;
 	}
 }
 
 void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 	int iq,ithetaphi;
-	double phi,ctheta,stheta,qx,qy,qz,qinv;
+	double phi,ctheta,stheta,qx,qy,qz,qinv,cosgamma;
 	double r,psisquared,ctheta_qr;
 	vector<double> x(4,0.0);
 	CalcXR(parta,partb,x,r);
@@ -77,7 +79,10 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 					exit(1);
 				}
 				cf_qinv[iq]+=psisquared/D3q;
+				cosgamma=qx;
+				cf_1[iq]+=psisquared*cosgamma/D3q;	
 				norm_qinv[iq]+=1.0/D3q;
+				norm_cf1[iq]+=cosgamma/D3q;
 				/*
 				if(USE_OUTSIDELONG_DIRECTION_CUT){
 				if(fabs(qx)>OUTSIDELONG_DIRECTION_CUT){
@@ -126,7 +131,7 @@ void CF::Increment(CHBT_Part *parta,CHBT_Part *partb){
 void CF::Increment(vector<double> &x){
 
 	int iq,ithetaphi;
-	double phi,ctheta,stheta,qx,qy,qz,qinv,qperp;
+	double phi,ctheta,stheta,qx,qy,qz,qinv,qperp,cosgamma;
 	double r,psisquared,ctheta_qr;
 	r=sqrt(x[1]*x[1]+x[2]*x[2]+x[3]*x[3]);
 	nincrement+=1;
@@ -147,8 +152,15 @@ void CF::Increment(vector<double> &x){
 			qinv=(iq+0.5)*DELQ;
 			psisquared=wf->CalcPsiSquared(iq,r,ctheta_qr);
 			//psisquared=1.0;
+			
+			cosgamma=qx;
+		//	printf("%8.5f\n", cosgamma);
+		//	if(qx>0){
+			cf_1[iq]+=psisquared*cosgamma/D3q;	
+			//psisquared=1.0;
 			cf_qinv[iq]+=psisquared/D3q;
 			norm_qinv[iq]+=1.0/D3q;
+			norm_cf1[iq]+=1.0/D3q;
 			if(USE_OUTSIDELONG_Q_CUT){
 				qperp=qinv*sqrt(1.0-qx*qx);
 				if(qperp<OUTSIDELONG_Q_CUT){
@@ -198,6 +210,11 @@ void CF::Normalize(){
 		}
 		else
 			cf_qinv[iq]=0;
+		if(norm_qinv[iq]>0){
+			cf_1[iq]=cf_1[iq]/norm_qinv[iq];			
+		}
+		else
+			cf_1[iq]=0;
 		if(norm_qout[iq]>1.0E-20){
 			cf_qout[iq]=cf_qout[iq]/norm_qout[iq];
 		}
@@ -218,11 +235,17 @@ void CF::Normalize(){
 
 void CF::Print(){
 	int iq;
-	printf("#---- CF ------, norm_qinv=%g\n",norm_qinv[0]);
-	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong)\n");
+	ofstream fout;
+	fout.open("CF_1.dat", ios::out);
+		if(!fout.is_open()){cerr << "can not open file"; exit(10);}
+	
+	printf("#---- CF ------, norm_qinv=%g, norm_cf1=%g\n",norm_qinv[0], norm_cf1[0]);
+	printf("q(MeV/c) CF(qinv) CF(qout) CF(side) CF(qlong) CF(q1) norm_cf1\n");
 	for(iq=0;iq<NQ;iq++){
-		printf("%7.3f %8.5f %8.5f %8.5f %8.5f\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq]);
+		fout << (iq+0.5)*DELQ << " " << cf_1[iq] << " " << cf_qinv[iq] << endl;
+		printf("%7.3f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5g\n",(iq+0.5)*DELQ,cf_qinv[iq],cf_qout[iq],cf_qside[iq],cf_qlong[iq], cf_1[iq], norm_cf1[iq]);
 	}
+    fout << endl;
 	printf("nincrement=%lld\n",nincrement);
 }
 

@@ -13,9 +13,8 @@ int main(int argc,char *argv[]){
 	CF cf_smash;
 	string filename;
 	time_t start, end; 
-	
-	filename=hbt.RESULTS_DIR+"/CFs/average.txt";
-	cf_smash.ReadCFs(filename);
+//	filename=hbt.RESULTS_DIR+"/CFs/average.txt";
+//	cf_smash.ReadCFs(filename);
 
 	printf("Enter Rout,Rside,Rlong, xoff, yoff, zoff: ");
 	scanf("%lf %lf %lf %lf %lf %lf",&Rout,&Rside,&Rlong,&xoff,&yoff,&zoff);
@@ -24,8 +23,8 @@ int main(int argc,char *argv[]){
 	hbt.CalcCF_Gauss(Rout,Rside,Rlong,xoff,yoff,zoff);
     end=time(NULL);
 	
-	double chisquare=hbt.GetChiSquare(hbt.cfgauss,&cf_smash);
-	printf("chisquare=%g\n",chisquare);
+//	double chisquare=hbt.GetChiSquare(hbt.cfgauss,&cf_smash);
+//	printf("chisquare=%g\n",chisquare);
 	//printf("Time elapsed:%.2f\n", difftime(end,start));
 	
 	hbt.cfgauss->Print();

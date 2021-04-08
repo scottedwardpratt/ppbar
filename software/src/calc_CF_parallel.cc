@@ -48,29 +48,42 @@ void CHBT_BES::CalcCF(){
 	}
 }
 
-void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong){
+void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong, double xoff, double yoff, double zoff){
 	int imc;
 	vector<double> x;
 	double root2=sqrt(2.0);
 	x.resize(4);
 	x[0]=0.0;
+	int j=1;
 	cfgauss->nincrement=0;
+	double x2,y,z;
 	//#pragma omp parallel for
-	for(imc=0;imc<NMC;imc++){
-		x[1]=root2*Rout*randy->ran_gauss();
-		x[2]=root2*Rside*randy->ran_gauss();
-		x[3]=root2*Rlong*randy->ran_gauss();
-	//	printf("%g", x[1]);
+	for(imc = 0;imc<NMC;imc++){
+		x2=root2*Rout*randy->ran_gauss();
+		y=root2*Rside*randy->ran_gauss();
+		z=root2*Rlong*randy->ran_gauss();
+		
+		x[1]=x2+xoff;
+		x[2]=y+yoff;
+		x[3]=z+zoff;
 		cfgauss->Increment(x);
-		/*
-		if((10*(imc+1))%NMC==0){
-			printf("finished %g percent\n",100.0*(imc+1)/double(NMC));
-		}
-		*/
+		
+		x[1]=-x2+xoff;
+		x[2]=-y+yoff;
+		x[3]=-z+zoff;
+		cfgauss->Increment(x);
+			
 	}
-
 	
-	cfgauss->Normalize();
+				
+	
+	/*
+	if((10*(imc+1))%NMC==0){
+	printf("finished %g percent\n",100.0*(imc+1)/double(NMC));
+	}
+	*/
+	
+cfgauss->Normalize();
 }
 
 
