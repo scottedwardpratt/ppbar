@@ -59,7 +59,7 @@ public:
 	void AddPart(int &IDread,vector<double> &pread,vector<double> &xread,double mass);
 	void CalcXBjPt(CHBT_Part *partaa,vector<double> &xread);
 	void CalcCF();
-	void CalcCF_Gauss(double Rout,double Rside, double Rlong);
+	void CalcCF_Gauss(double Rout,double Rside, double Rlong, double xoff, double yoff, double zoff);
 	void WriteCFs();
 	CF *GetCF(CHBT_Part *parta,CHBT_Part *partb);
 	void AverageCF();
@@ -94,9 +94,9 @@ public:
 	double ncoalescence;
 	double CoalescenceWeight(double r);
 	CWaveFunction *wf;
-	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong;
+	vector<double> cf_qinv,cf_qout,cf_qside,cf_qlong,cf_1;
 	vector<double> source_out,source_side,source_long;
-	vector<double> norm_qinv,norm_qout,norm_qside,norm_qlong;
+	vector<double> norm_qinv,norm_qout,norm_qside,norm_qlong,norm_cf1;
 	void CalcXR(CHBT_Part *partaa,CHBT_Part *partbb,vector<double> &x,double &r);
 	void Reset();
 	void Normalize();
