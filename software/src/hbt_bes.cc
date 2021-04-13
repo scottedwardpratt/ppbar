@@ -23,7 +23,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	CF::Nxyz=100;
 	CF::Dxyz=0.5;
 	CF::Rcoalescence=parmap->getD("RCOALESCENCE",2.0);
-	CF::NSAMPLE_THETAPHI=parmap->getI("NSAMPLE_THETAPHI",4);
+	CF::NSAMPLE_THETAPHI=parmap->getI("NSAMPLE_THETAPHI",8);
 	CF::COAL_USE_WF=parmap->getB("COAL_USE_WF",false);
 	RESULTS_DIR=parmap->getS("RESULTS_DIR","results");
 	NPHI=parmap->getI("NPHI",16);
@@ -86,7 +86,7 @@ CHBT_BES::CHBT_BES(string parsfilename){
 		MASSA=MASSB=938.272;
 		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
 	}
-	else if((IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212) || (IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212)){
+	else if((IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212) || (IDA==-2212 && IDB==-2112) || (IDA==-2112 && IDB==-2212)){
 		MASSA=MASSB=939.0;
 		wf=new CWaveFunction_pn_phaseshift(parsfilename);
 	}
@@ -249,13 +249,15 @@ void CHBT_BES::AverageCF(){
 					if(pt>=ptmin_averaging && pt<=ptmax_averaging){
 						cfptr=CFArray[irap][iphi][iuperp];
 						cfbar->nincrement+=cfptr->nincrement;
-						if(cfptr->norm_qinv[0]>1.0E-20){
+						if(cfptr->norm_qinv[0]>1.0E-20 || cfptr->norm_cf1[0]>1.0E-20){
 							for(iq=0;iq<CF::NQ;iq++){
 								cfbar->norm_qinv[iq]+=cfptr->norm_qinv[iq];
+								cfbar->norm_cf1[iq]+=cfptr->norm_cf1[iq];								
 								cfbar->norm_qout[iq]+=cfptr->norm_qout[iq];
 								cfbar->norm_qside[iq]+=cfptr->norm_qside[iq];
 								cfbar->norm_qlong[iq]+=cfptr->norm_qlong[iq];
 								cfbar->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+								cfbar->cf_1[iq]+=cfptr->cf_1[iq]*cfptr->norm_cf1[iq];			
 								cfbar->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
 								cfbar->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
 								cfbar->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
@@ -276,6 +278,8 @@ void CHBT_BES::AverageCF(){
 		cfbar->cf_qout[iq]=cfbar->cf_qout[iq]/cfbar->norm_qout[iq];
 		cfbar->cf_qside[iq]=cfbar->cf_qside[iq]/cfbar->norm_qside[iq];
 		cfbar->cf_qlong[iq]=cfbar->cf_qlong[iq]/cfbar->norm_qlong[iq];
+		cfbar->cf_1[iq]=cfbar->cf_1[iq]/cfbar->norm_cf1[iq];
+		
 	}
 	printf("nincrement_sum=%lld, cfbar->norm_qinv[0]=%g\n",cfbar->nincrement,cfbar->norm_qinv[0]);
 }
@@ -297,13 +301,15 @@ void CHBT_BES::AverageCF(CF *cf,double rapmin,double rapmax,double ptmin,double 
 						if(pt>=ptmin && pt<=ptmax){
 							cfptr=CFArray[irap][iphi][iuperp];
 							cf->nincrement+=cfptr->nincrement;
-							if(cfptr->norm_qinv[0]>1.0E-20){
+							if(cfptr->norm_qinv[0]>1.0E-20 || cfptr->norm_cf1[0]>1.0E-20){
 								for(iq=0;iq<CF::NQ;iq++){
 									cf->norm_qinv[iq]+=cfptr->norm_qinv[iq];
+									cf->norm_cf1[iq]+=cfptr->norm_cf1[iq];									
 									cf->norm_qout[iq]+=cfptr->norm_qout[iq];
 									cf->norm_qside[iq]+=cfptr->norm_qside[iq];
 									cf->norm_qlong[iq]+=cfptr->norm_qlong[iq];
 									cf->cf_qinv[iq]+=cfptr->cf_qinv[iq]*cfptr->norm_qinv[iq];
+									cf->cf_1[iq]+=cfptr->cf_1[iq]*cfptr->norm_cf1[iq];									
 									cf->cf_qout[iq]+=cfptr->cf_qout[iq]*cfptr->norm_qout[iq];
 									cf->cf_qside[iq]+=cfptr->cf_qside[iq]*cfptr->norm_qside[iq];
 									cf->cf_qlong[iq]+=cfptr->cf_qlong[iq]*cfptr->norm_qlong[iq];
@@ -323,6 +329,7 @@ void CHBT_BES::AverageCF(CF *cf,double rapmin,double rapmax,double ptmin,double 
 	}
 	for(iq=0;iq<CF::NQ;iq++){
 		cf->cf_qinv[iq]=cf->cf_qinv[iq]/cf->norm_qinv[iq];
+		cf->cf_1[iq]=cf->cf_1[iq]/cf->norm_cf1[iq];
 		cf->cf_qout[iq]=cf->cf_qout[iq]/cf->norm_qout[iq];
 		cf->cf_qside[iq]=cf->cf_qside[iq]/cf->norm_qside[iq];
 		cf->cf_qlong[iq]=cf->cf_qlong[iq]/cf->norm_qlong[iq];
