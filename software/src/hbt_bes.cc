@@ -76,14 +76,17 @@ CHBT_BES::CHBT_BES(string parsfilename){
 	}
 	else if((IDA==321 && IDB==321) || (IDA==-321 && IDB==-321)){
 		MASSA=MASSB=493.677;
+		QAB=1;
 		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,1.0);
 	}
 	else if((IDA==321 && IDB==-321) || (IDA==-321 && IDB==321)){
 		MASSA=MASSB=493.677;
+		QAB=-1;
 		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
 	}
 	else if((IDA==2212 && IDB==-2212) || (IDA==-2212 && IDB==2212)){
 		MASSA=MASSB=938.272;
+		QAB=-1;
 		wf=new CWaveFunction_generic(parsfilename,QAB,MASSA,MASSB,0.5);
 	}
 	else if((IDA==2212 && IDB==2112) || (IDA==2112 && IDB==2212) || (IDA==-2212 && IDB==-2112) || (IDA==-2112 && IDB==-2212)){
