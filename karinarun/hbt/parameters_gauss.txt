@@ -17,3 +17,4 @@ NMC 100000
 RANSEED -12345
 QINVTEST 25.0       #for determining if momenta are sufficiently close for HBT calc
 GAUSS true
+QAB -1
