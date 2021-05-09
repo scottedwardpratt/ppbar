@@ -35,3 +35,14 @@ add_executable(ppbartest ${SOURCE_FILES})
 add_dependencies(ppbartest extern_coral extern_commonutils)
 target_link_libraries(ppbartest ${GITHOME_MSU}/coral/software/lib/libcoral.a ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
 
+set(SOURCE_FILES ./cwcomplex.cc)
+SET_SOURCE_FILES_PROPERTIES(cwcomplex.cc
+	PROPERTIES OBJECT_DEPENDS ${GITHOME_MSU}/coral/software/lib/libcoral.a
+)
+SET_SOURCE_FILES_PROPERTIES(cwcomplex.cc
+	PROPERTIES OBJECT_DEPENDS  ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a
+)
+project(cwcomplex CXX)
+add_executable(cwcomplex ${SOURCE_FILES})
+add_dependencies(cwcomplex extern_coral extern_commonutils)
+target_link_libraries(cwcomplex ${GITHOME_MSU}/coral/software/lib/libcoral.a ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})

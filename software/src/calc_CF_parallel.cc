@@ -54,7 +54,6 @@ void CHBT_BES::CalcCF_Gauss(double Rout,double Rside,double Rlong, double xoff, 
 	double root2=sqrt(2.0);
 	x.resize(4);
 	x[0]=0.0;
-	int j=1;
 	cfgauss->nincrement=0;
 	double x2,y,z;
 	//#pragma omp parallel for

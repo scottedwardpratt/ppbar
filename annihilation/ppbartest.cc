@@ -3,15 +3,25 @@
 
 using namespace std;
 
-int main(){
+int main(int argc,char *argv[]){
+	string parsfilename;
+	if(argc!=2){
+		printf("usage: ppbartest parsfilename\n");
+		exit(1);
+	}
+	parsfilename=argv[1];
 	double q,r,ctheta,x,y,z,Rx,Ry,Rz,psi2,delq;
 	vector<double>psi2bar;
-	unsigned long long int imc,nmc=5000;
+	unsigned long long int imc,nmc;
 	int iq,nqmax;
-	CWaveFunction_ppbar_nocoulomb wf("ppbar_parameters.txt");
+	CWaveFunction *wf;
+	//wf=new CWaveFunction_ppbar_nocoulomb(parsfilename);
+	wf=new CWaveFunction_optical(parsfilename);
+	printf("wf created\n");
+	nmc=wf->parameters.getI("NMC",1000);
 	CRandy *randy=new CRandy(time(NULL));
-	delq=wf.GetDELQ();
-	nqmax=wf.GetNQMAX();
+	delq=wf->GetDELQ();
+	nqmax=wf->GetNQMAX();
 	psi2bar.resize(nqmax);
 	for(iq=0;iq<nqmax;iq++){
 		psi2bar[iq]=0.0;
@@ -24,7 +34,7 @@ int main(){
 		r=sqrt(x*x+y*y+z*z);
 		ctheta=1.0-2.0*randy->ran();
 		for(iq=0;iq<nqmax;iq++){
-			psi2=wf.GetPsiSquared(iq,r,ctheta);
+			psi2=wf->GetPsiSquared(iq,r,ctheta);
 			psi2bar[iq]+=psi2;
 		}
 	}
@@ -37,8 +47,6 @@ int main(){
 		fprintf(fptr,"%5.1f %g\n",q,psi2bar[iq]/double(nmc));
 	}
 	fclose(fptr);
+	delete wf;
 	return 0;
 }
-
-
-
