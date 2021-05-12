@@ -16,8 +16,7 @@ int main(int argc,char *argv[]){
 	vector<double>psi2bar;
 	unsigned long long int imc,nmc;
 	int iq,nqmax;
-	CWaveFunction *wf;
-	//wf=new CWaveFunction_ppbar_nocoulomb(parsfilename);
+	CWaveFunction_optical *wf;
 	wf=new CWaveFunction_optical(parsfilename);
 	nmc=wf->parameters.getI("NMC",1000);
 	CRandy *randy=new CRandy(time(NULL));
@@ -37,11 +36,10 @@ int main(int argc,char *argv[]){
 			r=sqrt(x*x+y*y+z*z);
 			ctheta=1.0-2.0*randy->ran();
 			psi2=wf->GetPsiSquared(q,r,ctheta);
-			//psi2=wf->CalcPsiSquared(iq,r,ctheta);
 			psi2bar[iq]+=psi2;
 		}
-		printf("%5.1f %g\n",q,psi2bar[iq]/double(nmc));
-		fprintf(fptr,"%5.1f %g\n",q,psi2bar[iq]/double(nmc));
+		printf("%5.1f %8.5f %7.2f mb\n",q,psi2bar[iq]/double(nmc),10.0*wf->sigma_annihilation[iq]);
+		fprintf(fptr,"%5.1f %8.5f %7.2f mb\n",q,psi2bar[iq]/double(nmc),10.0*wf->sigma_annihilation[iq]);
 	}
 	fclose(fptr);
 	delete wf;

@@ -115,9 +115,9 @@ double GetChiSquare(double VR,double VI,double a){
 
 int main(int argc,char *argv[]){
 	double chisquare,bestchisquare=1.0E10,VR,VI,a,besta=1.0E10,bestVR=1.0E10,bestVI=1000000.0,formula,plab,sigma;
-	for(a=1.8;a<1.9;a+=0.001){
-		for(VR=-10;VR<-8.0;VR+=0.01){
-			for(VI=24.0;VI<26.0;VI+=0.01){
+	for(a=1.81;a<1.85;a+=0.001){
+		for(VR=-9.5;VR<-8.0;VR+=0.01){
+			for(VI=24.5;VI<25.5;VI+=0.01){
 				chisquare=GetChiSquare(VR,VI,a);
 				if(chisquare<bestchisquare){
 					besta=a;
@@ -137,7 +137,7 @@ int main(int argc,char *argv[]){
 	for(plab=50;plab<1500;plab+=50){
 		formula=6.7*pow(plab/1000.0,-0.7);
 		sigma=GetSigma(VR,VI,a,plab);
-		printf("%6.1f %8.4f %8.4f\n",plab,sigma,formula);
+		printf("%6.1f %6.1f %8.4f %8.4f\n",plab,GetK(plab),sigma,formula);
 	}
 	
 	return 0;

@@ -64,3 +64,17 @@ project(wftest CXX)
 add_executable(wftest ${SOURCE_FILES})
 add_dependencies(wftest extern_coral extern_commonutils)
 target_link_libraries(wftest ${GITHOME_MSU}/coral/software/lib/libcoral.a ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+
+#################################################
+
+set(SOURCE_FILES ./coulfit.cc)
+SET_SOURCE_FILES_PROPERTIES(coulfit.cc
+	PROPERTIES OBJECT_DEPENDS ${GITHOME_MSU}/coral/software/lib/libcoral.a
+)
+SET_SOURCE_FILES_PROPERTIES(coulfit.cc
+	PROPERTIES OBJECT_DEPENDS  ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a
+)
+project(coulfit CXX)
+add_executable(coulfit ${SOURCE_FILES})
+add_dependencies(coulfit extern_coral extern_commonutils)
+target_link_libraries(coulfit ${GITHOME_MSU}/coral/software/lib/libcoral.a ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
