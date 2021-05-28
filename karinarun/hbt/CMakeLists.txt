@@ -53,16 +53,17 @@ add_dependencies(hbt_gausscompare extern_hbt_bes extern_coral extern_commonutils
 target_link_libraries(hbt_gausscompare hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
 
 #################################################
-include_directories(SYSTEM ${GSL_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GITHOME_MSU}/ppbar/software/include ${GITHOME_MSU}/commonutils/software/include ${GITHOME_MSU}/coral/software/include)   
-link_directories(${GITHOME_MSU}/ppbar/software/lib ${GITHOME_MSU}/commonutils/software/lib ${GITHOME_MSU}/coral/software/lib)
-
-message("Libraries: b3d_bes  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}" )
-
+project(test CXX)
 set(SOURCE_FILES ./test.cc)
-SET_SOURCE_FILES_PROPERTIES(
-	test.cc PROPERTIES OBJECT_DEPENDS ${GITHOME_MSU}/ppbar/software/lib/libhbt_bes.a OBJECT_DEPENDS ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a OBJECT_DEPENDS ${GITHOME_MSU}/coral/software/lib/libcoral.a
+SET_SOURCE_FILES_PROPERTIES(test.cc
+	PROPERTIES OBJECT_DEPENDS ${GITHOME_MSU}/coral/software/lib/libcoral.a
 )
+SET_SOURCE_FILES_PROPERTIES(test.cc
+	PROPERTIES OBJECT_DEPENDS  ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a
+)
+include_directories(SYSTEM ${GSL_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GITHOME_MSU}/ppbar/software/include ${GITHOME_MSU}/commonutils/software/include ${GITHOME_MSU}/coral/software/include)  
+link_directories(${GITHOME_MSU}/ppbar/software/lib ${GITHOME_MSU}/commonutils/software/lib ${GITHOME_MSU}/coral/software/lib)
 
 add_executable(test ${SOURCE_FILES})
 add_dependencies(test extern_hbt_bes extern_coral extern_commonutils)
-target_link_libraries(test hbt_bes coral commonutils ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
+target_link_libraries(test ${GITHOME_MSU}/coral/software/lib/libcoral.a ${GITHOME_MSU}/commonutils/software/lib/libcommonutils.a ${GITHOME_MSU}/ppbar/software/lib/libhbt_bes.a  ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${EIGEN3_LIBRARY})
