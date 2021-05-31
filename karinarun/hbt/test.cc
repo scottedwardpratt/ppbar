@@ -13,10 +13,10 @@ using namespace std;
 
 int main(int argc,char *argv[]){
 
-	long double x;
-	long double r;
+	double x;
+	double r;
 	CRandy *randy=new CRandy(-12345);
-	long double arr [10000];
+	double arr [10000];
 	int ix;
 	int delx=20;
 	int dndx[200];
