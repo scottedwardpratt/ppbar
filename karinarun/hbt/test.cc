@@ -5,6 +5,7 @@
 #include "commondefs.h"
 #include "coral.h"
 #include "hbt_bes.h"
+#include "randy.h"
 
 
 
@@ -14,19 +15,21 @@ int main(int argc,char *argv[]){
 
 	long double x;
 	long double r;
+	CRandy *randy=new CRandy(-12345);
 	long double arr [10000];
 	int ix;
 	int delx=20;
 	int dndx[200];
 	ofstream fout;
+	double T=300.0;
 	fout.open("test.dat", ios::out);
 	
 	for(int i=0; i<10000; i++){
-		//out of bounds errors?
 		r=randy->ran();
-		x=-log(r);
-		ix=floorl(x/delx);
-		if(ix<200){
+		printf("r: %lf\n", r);
+		x=-T*log(r);
+		ix=floorl(x/delx);		
+			if(ix<200){
 			dndx[ix]+=1;
 			fout << ix << " " << dndx[ix] <<  endl;
 		}		
