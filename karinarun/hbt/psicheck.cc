@@ -27,22 +27,13 @@ int main(){
 	x[1]=root2*4*randy->ran_gauss();
 	x[2]=root2*5*randy->ran_gauss();
 	int iq;
-	double phi,ctheta,stheta,qx,qy,qz,q;
+	double phi,ctheta,stheta,qx,qy,qz,q,qz2,qx2,qy2,ctheta_qr2;
 	double r,psisquared,psi,ctheta_qr;
 	string filename="parameters/parameters_pp.txt";
-<<<<<<< HEAD
-	CWaveFunction *wf=new CWaveFunction_generic(filename, -1, 938.272, 938.272, 0.5);
-	r=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
-	
-	
-//	for(iq=0; iq<NSAMPLE_THETAPHI; iq++){
-=======
 	CWaveFunction *wf=new CWaveFunction_generic(filename, -1, ProtonMass, ProtonMass, 0.5);
-	r=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
-	
+	r=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);	
 	
 	for(iq=0; iq<CF::NSAMPLE_THETAPHI; iq++){
->>>>>>> f369eb3f61acf6aa8cf3b6d4844a99f8c5432408
 		phi=2.0*PI*randy->ran();
 		ctheta=-1.0+2.0*randy->ran();
 		stheta=sqrt(1.0-ctheta*ctheta);
@@ -52,22 +43,18 @@ int main(){
 		q=sqrt(qx*qx+qy*qy+qz*qz);
 		ctheta_qr=(qx*x[0]+qy*x[1]+qz*x[2])/r;
 		
+		qz2=-ctheta;
+		qx2=-stheta*cos(phi);
+		qy2=-stheta*sin(phi);
+		ctheta_qr2=(-qx*x[0]-qy*x[1]-qz*x[2])/r;
+		
 		psisquared=wf->GetPsiSquared(q,r,ctheta_qr);
-<<<<<<< HEAD
-		psi=wf->GetPsiSquared(-q,r,ctheta_qr);
-		if(psisquared != psi){
-=======
-		psi=wf->GetPsiSquared(q,r,-ctheta_qr);
-<<<<<<< HEAD
-		if(psisquared != psi){
-=======
+		psi=wf->GetPsiSquared(q,r,ctheta_qr2);
 		if(psisquared == psi){
->>>>>>> f369eb3f61acf6aa8cf3b6d4844a99f8c5432408
->>>>>>> 6d354b2f5f480f2fa0ada99818dd9cf0fa1c5e30
 			printf("Psi error");
 			exit (1);
 		}
-//	}
+	}
 	
 	return 0;
 }
